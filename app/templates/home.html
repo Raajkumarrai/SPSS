@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}SPPS - Student Performance Prediction System{% endblock %}
+
+{% block nav_buttons %}
+{% if session.get('user_id') %}
+{% if session.get('role') == 'admin' %}
+<a href="/admin/home">Admin Dashboard</a>
+<a href="/admin/predict">Predict</a>
+{% else %}
+<a href="/user/home">User Dashboard</a>
+<a href="/predict">Predict</a>
+{% endif %}
+<a href="/logout">Logout</a>
+{% else %}
+<a href="/login">Login</a>
+<a href="/signup">Sign Up</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Futuristic Landing Page -->
+<div class="futuristic-landing">
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="hero-background">
+            <div class="hero-particles"></div>
+            <div class="hero-grid"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="bi bi-cpu"></i>
+                <span>ML-Powered Education Analytics</span>
+            </div>
+            <h1 class="hero-title">
+                The Future of
+                <span class="gradient-text">Student Analytics</span>
+                is Here
+            </h1>
+            <p class="hero-description">
+                Harness the power of machine learning to predict student performance,
+                identify at-risk students, and unlock insights that drive educational success.
+                Transform your institution with data-driven decision making.
+            </p>
+            <div class="hero-actions">
+                {% if session.get('user_id') %}
+                {% if session.get('role') == 'admin' %}
+                <a href="/admin/predict" class="btn-futuristic btn-primary btn-xl">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    <span>Launch Analytics</span>
+                </a>
+                <a href="/admin/home" class="btn-futuristic btn-outline btn-xl">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Admin Dashboard</span>
+                </a>
+                {% else %}
+                <a href="/predict" class="btn-futuristic btn-primary btn-xl">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Start Predicting</span>
+                </a>
+                <a href="/user/home" class="btn-futuristic btn-outline btn-xl">
+                    <i class="bi bi-house"></i>
+                    <span>My Dashboard</span>
+                </a>
+                {% endif %}
+                {% else %}
+                <a href="/signup" class="btn-futuristic btn-primary btn-xl">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    <span>Get Started Free</span>
+                </a>
+                <a href="/login" class="btn-futuristic btn-outline btn-xl">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Sign In</span>
+                </a>
+                {% endif %}
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.accuracy|default('94.2') }}%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.total_students_formatted|default('1,247+') }}</div>
+                    <div class="stat-label">Students</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.uptime|default('99.9') }}%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="bi bi-lightning-charge"></i>
+                Powerful Features
+            </h2>
+            <p class="section-subtitle">Everything you need to revolutionize student analytics</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-brain"></i>
+                </div>
+                <h3 class="feature-title">ML-Powered Predictions</h3>
+                <p class="feature-description">
+                    Advanced machine learning algorithms analyze student data to provide
+                    highly accurate performance predictions with {{ stats.accuracy|default('94.2') }}% accuracy.
+                </p>
+                <div class="feature-badge">
+                    <span>{{ stats.accuracy|default('94.2') }}% Accuracy</span>
+                </div>
+            </div>
+
+            <!-- <div class="feature-card">
+                <div class="feature-icon"
+                    style="background: linear-gradient(135deg, var(--secondary), var(--secondary-light));">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h3 class="feature-title">Early Risk Detection</h3>
+                <p class="feature-description">
+                    Identify at-risk students before they fall behind with intelligent
+                    early warning systems and proactive intervention recommendations.
+                </p>
+                <div class="feature-badge">
+                    <span>Proactive Alerts</span>
+                </div>
+            </div> -->
+
+            <div class="feature-card">
+                <div class="feature-icon"
+                    style="background: linear-gradient(135deg, var(--accent), var(--accent-light));">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <h3 class="feature-title">Real-time Analytics</h3>
+                <p class="feature-description">
+                    Get instant insights with live dashboards, performance tracking,
+                    and comprehensive analytics that update in real-time.
+                </p>
+                <div class="feature-badge">
+                    <span>Live Data</span>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon"
+                    style="background: linear-gradient(135deg, var(--purple), var(--purple-light));">
+                    <i class="bi bi-collection"></i>
+                </div>
+                <h3 class="feature-title">Bulk Processing</h3>
+                <p class="feature-description">
+                    Process hundreds of students simultaneously with our high-performance
+                    batch prediction system designed for educational institutions.
+                </p>
+                <div class="feature-badge">
+                    <span>High Performance</span>
+                </div>
+            </div>
+
+            <!-- <div class="feature-card">
+                <div class="feature-icon" style="background: linear-gradient(135deg, var(--info), var(--info-light));">
+                    <i class="bi bi-gear"></i>
+                </div>
+                <h3 class="feature-title">Customizable Models</h3>
+                <p class="feature-description">
+                    Tailor prediction models to your institution's specific needs with
+                    customizable parameters and domain-specific training data.
+                </p>
+                <div class="feature-badge">
+                    <span>Adaptive AI</span>
+                </div>
+            </div> -->
+
+            <!-- <div class="feature-card">
+                <div class="feature-icon"
+                    style="background: linear-gradient(135deg, var(--success), var(--success-light));">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h3 class="feature-title">Enterprise Security</h3>
+                <p class="feature-description">
+                    Bank-level security with end-to-end encryption, GDPR compliance,
+                    and secure data handling for educational institutions.
+                </p>
+                <div class="feature-badge">
+                    <span>GDPR Compliant</span>
+                </div>
+            </div>
+        </div> -->
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2 class="cta-title">Ready to Transform Your Institution?</h2>
+            <p class="cta-description">
+                Join thousands of educators who are already using AI to improve student outcomes.
+                Start your free trial today and see the difference data-driven education makes.
+            </p>
+            <div class="cta-actions">
+                {% if not session.get('user_id') %}
+                <a href="/signup" class="btn-futuristic btn-primary btn-xl">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    <span>Start Free Trial</span>
+                </a>
+                <a href="/login" class="btn-futuristic btn-outline btn-xl">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Sign In</span>
+                </a>
+                {% else %}
+                <a href="/predict" class="btn-futuristic btn-primary btn-xl">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Make Prediction</span>
+                </a>
+                <a href="/user/home" class="btn-futuristic btn-outline btn-xl">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>View Dashboard</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block styles %}
+<!-- Futuristic styles are now in the main CSS file -->
+{% endblock %}

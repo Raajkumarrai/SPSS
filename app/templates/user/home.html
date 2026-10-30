@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}User Home - SPPS{% endblock %}
+
+{% block nav_buttons %}
+<a href="/predict">Predict</a>
+<a href="/logout">Logout</a>
+{% endblock %}
+
+{% block content %}
+<div class="futuristic-dashboard">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-background">
+            <div class="hero-particles"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="bi bi-cpu"></i>
+                <span>ML-Powered Analytics</span>
+            </div>
+            <h1 class="hero-title">
+                Welcome to the Future of
+                <span class="gradient-text">Student Analytics</span>
+            </h1>
+            <p class="hero-description">
+                Harness the power of machine learning to predict student performance,
+                track academic progress, and unlock insights that drive educational success.
+            </p>
+            <div class="hero-actions">
+                <a href="/predict" class="btn-futuristic btn-primary btn-xl">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    <span>Launch Prediction</span>
+                </a>
+                <a href="/user/students" class="btn-futuristic btn-outline btn-xl">
+                    <i class="bi bi-graph-up"></i>
+                    <span>View Analytics</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dynamic Stats Grid -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card" data-stat="accuracy">
+                <div class="stat-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="accuracy-value">{{ stats.accuracy|default('94.2') }}%</div>
+                    <div class="stat-label">Prediction Accuracy</div>
+                    <div class="stat-change {{ 'positive' if stats.accuracy_change >= 0 else 'negative' }}">
+                        <i class="bi bi-arrow-{{ 'up' if stats.accuracy_change >= 0 else 'down' }}"></i>
+                        {{ '+' if stats.accuracy_change >= 0 else '' }}{{ stats.accuracy_change|default('2.1') }}% this
+                        month
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card" data-stat="students">
+                <div class="stat-icon"
+                    style="background: linear-gradient(135deg, var(--secondary), var(--secondary-light));">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="students-value">{{ stats.total_students|default('1,247') }}</div>
+                    <div class="stat-label">Active Students</div>
+                    <!-- <div class="stat-change {{ 'positive' if stats.students_change >= 0 else 'negative' }}">
+                        <i class="bi bi-arrow-{{ 'up' if stats.students_change >= 0 else 'down' }}"></i>
+                        {{ '+' if stats.students_change >= 0 else '' }}{{ stats.students_change|default('0') }} this week
+                    </div> -->
+                </div>
+            </div>
+
+            <div class="stat-card" data-stat="response-time">
+                <div class="stat-icon" style="background: linear-gradient(135deg, var(--accent), var(--accent-light));">
+                    <i class="bi bi-lightning"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="response-value">{{ stats.avg_response_time|default('3.2') }}s</div>
+                    <div class="stat-label">Avg Response Time</div>
+                    <div class="stat-change {{ 'positive' if stats.response_change <= 0 else 'negative' }}">
+                        <i class="bi bi-arrow-{{ 'down' if stats.response_change <= 0 else 'up' }}"></i>
+                        {{ '+' if stats.response_change > 0 else '' }}{{ stats.response_change|default('-0.4') }}s {{
+                        'slower' if stats.response_change > 0 else 'faster' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card" data-stat="uptime">
+                <div class="stat-icon" style="background: linear-gradient(135deg, var(--purple), var(--purple-light));">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="uptime-value">{{ stats.system_uptime|default('99.9') }}%</div>
+                    <div class="stat-label">System Uptime</div>
+                    <div class="stat-change {{ 'positive' if stats.system_status == 'operational' else 'negative' }}">
+                        <i
+                            class="bi bi-{{ 'check-circle' if stats.system_status == 'operational' else 'exclamation-triangle' }}"></i>
+                        {{ stats.system_status|default('All systems operational') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="actions-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="bi bi-lightning-charge"></i>
+                Quick Actions
+            </h2>
+            <p class="section-subtitle">Access powerful tools with a single click</p>
+        </div>
+
+        <div class="actions-grid">
+            <a href="/predict" class="action-card">
+                <div class="action-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="action-content">
+                    <h3 class="action-title">AI Prediction</h3>
+                    <p class="action-description">Generate intelligent performance predictions using advanced machine
+                        learning algorithms</p>
+                    <div class="action-badge">
+                        <span>Powered by AI</span>
+                    </div>
+                </div>
+                <div class="action-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <a href="/user/students" class="action-card">
+                <div class="action-icon"
+                    style="background: linear-gradient(135deg, var(--secondary), var(--secondary-light));">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div class="action-content">
+                    <h3 class="action-title">Student Management</h3>
+                    <p class="action-description">Manage student records, track academic progress, and monitor
+                        performance metrics</p>
+                    <div class="action-badge">
+                        <span>{{ stats.total_students_formatted|default('1,247 Students') }}</span>
+                    </div>
+                </div>
+                <div class="action-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <a href="/user/history" class="action-card">
+                <div class="action-icon"
+                    style="background: linear-gradient(135deg, var(--accent), var(--accent-light));">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="action-content">
+                    <h3 class="action-title">Analytics History</h3>
+                    <p class="action-description">View detailed analytics, track trends, and analyze historical
+                        performance data</p>
+                    <div class="action-badge">
+                        <span>Real-time Data</span>
+                    </div>
+                </div>
+                <div class="action-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <a href="/user/mass-predict" class="action-card">
+                <div class="action-icon"
+                    style="background: linear-gradient(135deg, var(--purple), var(--purple-light));">
+                    <i class="bi bi-collection"></i>
+                </div>
+                <div class="action-content">
+                    <h3 class="action-title">Bulk Analysis</h3>
+                    <p class="action-description">Process multiple students simultaneously with advanced batch
+                        prediction capabilities</p>
+                    <div class="action-badge">
+                        <span>High Performance</span>
+                    </div>
+                </div>
+                <div class="action-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block styles %}
+<!-- Dynamic stats styles -->
+<style>
+    /* Loading Animation */
+    .stat-card.loading {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    .stat-card.loading .stat-value {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .stat-card.loading .stat-icon {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    /* Update Animation */
+    .stat-card.updating {
+        animation: glowPulse 0.6s ease-in-out;
+    }
+
+    .stat-value.updating {
+        animation: fadeInScale 0.3s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Dynamic Stats Management
+    class StatsManager {
+        constructor() {
+            this.updateInterval = null;
+            this.isUpdating = false;
+            this.init();
+        }
+
+        init() {
+            // Auto-refresh every 30 seconds
+            this.startAutoRefresh();
+
+            // Add hover effects for stat cards
+            this.addCardInteractions();
+        }
+
+        startAutoRefresh() {
+            this.updateInterval = setInterval(() => {
+                this.refreshStats(true); // Silent refresh
+            }, 30000); // 30 seconds
+        }
+
+        async refreshStats(showLoading = true) {
+            if (this.isUpdating) return;
+
+            this.isUpdating = true;
+
+            if (showLoading) {
+                this.showLoadingState();
+            }
+
+            try {
+                const response = await fetch('/api/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    this.updateStats(data);
+                    this.updateLastUpdated();
+                } else {
+                    console.error('Failed to fetch stats');
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            } finally {
+                this.isUpdating = false;
+                if (showLoading) {
+                    this.hideLoadingState();
+                }
+            }
+        }
+
+        showLoadingState() {
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.classList.add('loading');
+            });
+        }
+
+        hideLoadingState() {
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.classList.remove('loading');
+            });
+        }
+
+        updateStats(data) {
+            // Update accuracy
+            if (data.accuracy !== undefined) {
+                this.animateValue('accuracy-value', data.accuracy + '%');
+            }
+
+            // Update students
+            if (data.total_students !== undefined) {
+                this.animateValue('students-value', data.total_students.toLocaleString());
+            }
+
+            // Update response time
+            if (data.avg_response_time !== undefined) {
+                this.animateValue('response-value', data.avg_response_time + 's');
+            }
+
+            // Update uptime
+            if (data.system_uptime !== undefined) {
+                this.animateValue('uptime-value', data.system_uptime + '%');
+            }
+
+            // Update change indicators
+            this.updateChangeIndicators(data);
+        }
+
+        animateValue(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            element.classList.add('updating');
+            element.textContent = newValue;
+
+            setTimeout(() => {
+                element.classList.remove('updating');
+            }, 300);
+        }
+
+        updateChangeIndicators(data) {
+            // Update accuracy change
+            if (data.accuracy_change !== undefined) {
+                this.updateChangeIndicator('accuracy', data.accuracy_change);
+            }
+
+            // Update students change
+            if (data.students_change !== undefined) {
+                this.updateChangeIndicator('students', data.students_change);
+            }
+
+            // Update response change
+            if (data.response_change !== undefined) {
+                this.updateChangeIndicator('response-time', data.response_change);
+            }
+
+            // Update system status
+            if (data.system_status !== undefined) {
+                this.updateSystemStatus(data.system_status);
+            }
+        }
+
+        updateChangeIndicator(statType, change) {
+            const card = document.querySelector(`[data-stat="${statType}"]`);
+            if (!card) return;
+
+            const changeElement = card.querySelector('.stat-change');
+            const icon = changeElement.querySelector('i');
+            const text = changeElement.querySelector('span:last-child');
+
+            // Update classes
+            changeElement.className = `stat-change ${change >= 0 ? 'positive' : 'negative'}`;
+
+            // Update icon
+            icon.className = `bi bi-arrow-${change >= 0 ? 'up' : 'down'}`;
+
+            // Update text
+            const prefix = change >= 0 ? '+' : '';
+            text.textContent = `${prefix}${change}${statType === 'response-time' ? 's' : statType === 'students' ? '' : '%'} ${this.getChangePeriod(statType)}`;
+        }
+
+        updateSystemStatus(status) {
+            const card = document.querySelector('[data-stat="uptime"]');
+            if (!card) return;
+
+            const changeElement = card.querySelector('.stat-change');
+            const icon = changeElement.querySelector('i');
+            const text = changeElement.querySelector('span:last-child');
+
+            const isOperational = status === 'operational';
+            changeElement.className = `stat-change ${isOperational ? 'positive' : 'negative'}`;
+            icon.className = `bi bi-${isOperational ? 'check-circle' : 'exclamation-triangle'}`;
+            text.textContent = isOperational ? 'All systems operational' : status;
+        }
+
+        getChangePeriod(statType) {
+            switch (statType) {
+                case 'accuracy': return 'this month';
+                case 'students': return 'this week';
+                case 'response-time': return 'faster';
+                default: return '';
+            }
+        }
+
+        updateLastUpdated() {
+            const element = document.getElementById('last-update');
+            if (element) {
+                element.textContent = 'Just now';
+            }
+        }
+
+        addCardInteractions() {
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-8px) scale(1.02)';
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        }
+
+        destroy() {
+            if (this.updateInterval) {
+                clearInterval(this.updateInterval);
+            }
+        }
+    }
+
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        window.statsManager = new StatsManager();
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (window.statsManager) {
+            window.statsManager.destroy();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SPPS{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Main Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    {% block header %}{% include 'components/header.html' %}{% endblock %}
+    
+    <main>
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}" id="flash-{{ loop.index }}">
+                            <div class="flash-content">
+                                <div class="flash-icon">
+                                    {% if category == 'success' %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% elif category == 'error' %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    {% elif category == 'info' %}
+                                        <i class="fas fa-info-circle"></i>
+                                    {% else %}
+                                        <i class="fas fa-bell"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flash-text-container">
+                                    <span class="flash-text">{{ message }}</span>
+                                </div>
+                                <button class="flash-close" onclick="dismissFlash(this.parentElement.parentElement)" title="Close">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <script>
+                    // Auto-dismiss flash messages after 6 seconds
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const flashMessages = document.querySelectorAll('.flash-message');
+                        flashMessages.forEach(function(message, index) {
+                            // Stagger the auto-dismiss timing slightly for multiple messages
+                            setTimeout(function() {
+                                if (message && message.parentNode) {
+                                    dismissFlash(message);
+                                }
+                            }, 6000 + (index * 500)); // 6 seconds + staggered delay
+                        });
+                    });
+                    
+                    // Function to dismiss flash messages with animation
+                    function dismissFlash(element) {
+                        if (!element) return;
+                        element.style.animation = 'fadeOut 0.5s forwards';
+                        setTimeout(function() {
+                            if (element && element.parentNode) {
+                                element.parentNode.removeChild(element);
+                            }
+                        }, 500); // Match animation duration
+                    }
+                </script>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if session.get('user_id') and session.get('role') == 'admin' %}
+        {% include 'components/admin_footer.html' %}
+        <!-- Alternative options (uncomment one of these to use instead):
+        {% include 'components/minimal_footer.html' %}
+        -->
+    {% else %}
+        {% include 'components/footer.html' %}
+    {% endif %}
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Session management script - Only handles inactivity timeout -->
+    <script>
+        
+        // Handle inactivity timeout - will only log user out after complete inactivity
+        let inactivityTimeout;
+        const INACTIVITY_TIME = 30 * 60 * 1000; // 30 minutes in milliseconds
+        
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimeout);
+            inactivityTimeout = setTimeout(function() {
+                // Only redirect to logout if user is still logged in and inactive
+                {% if session.get('user_id') %}
+                    // Show warning before logging out
+                    if (confirm('You have been inactive for 30 minutes. Click OK to stay logged in or Cancel to log out.')) {
+                        // User clicked OK, reset the timer
+                        resetInactivityTimer();
+                    } else {
+                        // User clicked Cancel, log them out
+                        window.location.href = '/logout';
+                    }
+                {% endif %}
+            }, INACTIVITY_TIME);
+        }
+        
+        // Reset timer on user activity
+        ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(function(evt) {
+            document.addEventListener(evt, resetInactivityTimer, false);
+        });
+        
+        // Initialize the timer
+        resetInactivityTimer();
+        
+        // Enhanced Dropdown with 2-second delay
+        class DropdownManager {
+            constructor() {
+                this.timeouts = new Map();
+                this.init();
+            }
+            
+            init() {
+                // Add event listeners to all dropdowns
+                document.querySelectorAll('.dropdown').forEach(dropdown => {
+                    const content = dropdown.querySelector('.dropdown-content');
+                    const button = dropdown.querySelector('.dropbtn');
+                    
+                    if (!content || !button) return;
+                    
+                    // Mouse enter - show immediately
+                    dropdown.addEventListener('mouseenter', () => {
+                        this.clearTimeout(dropdown);
+                        this.showDropdown(content);
+                    });
+                    
+                    // Mouse leave - start 2-second delay
+                    dropdown.addEventListener('mouseleave', () => {
+                        this.scheduleHide(dropdown, content);
+                    });
+                    
+                    // Mouse enter content - cancel hide
+                    content.addEventListener('mouseenter', () => {
+                        this.clearTimeout(dropdown);
+                    });
+                    
+                    // Mouse leave content - start 2-second delay
+                    content.addEventListener('mouseleave', () => {
+                        this.scheduleHide(dropdown, content);
+                    });
+                });
+            }
+            
+            showDropdown(content) {
+                content.classList.add('show');
+                content.style.display = 'block';
+                // Force reflow to ensure display change takes effect
+                content.offsetHeight;
+                content.style.opacity = '1';
+                content.style.transform = 'translateY(0) scale(1)';
+            }
+            
+            hideDropdown(content) {
+                content.classList.remove('show');
+                content.style.opacity = '0';
+                content.style.transform = 'translateY(-10px) scale(0.95)';
+                
+                // Hide after transition completes
+                setTimeout(() => {
+                    if (content.style.opacity === '0') {
+                        content.style.display = 'none';
+                    }
+                }, 300);
+            }
+            
+            scheduleHide(dropdown, content) {
+                this.clearTimeout(dropdown);
+                const timeout = setTimeout(() => {
+                    this.hideDropdown(content);
+                    this.timeouts.delete(dropdown);
+                }, 1000); // 1 second
+                
+                this.timeouts.set(dropdown, timeout);
+            }
+            
+            clearTimeout(dropdown) {
+                if (this.timeouts.has(dropdown)) {
+                    clearTimeout(this.timeouts.get(dropdown));
+                    this.timeouts.delete(dropdown);
+                }
+            }
+        }
+        
+        // Initialize dropdown manager
+        document.addEventListener('DOMContentLoaded', () => {
+            new DropdownManager();
+        });
+    </script>
+</body>
+</html>

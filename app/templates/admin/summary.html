@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% block header %}{% include 'components/admin_header.html' %}{% endblock %}
+
+{% block title %}Admin Summary - SPPS{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="admin-summary-container">
+    <h2 style="text-align:center; color:#4169E1; margin-bottom:2.5rem;">System Summary</h2>
+    
+    <!-- Key Statistics -->
+    <div class="summary-stats-grid">
+        <div class="summary-stat-card">
+            <h3>Users</h3>
+            <div class="summary-stat-value">{{ summary_data.total_users if summary_data else 0 }}</div>
+            <div class="summary-stat-breakdown">
+                <span>Active: {{ summary_data.active_users if summary_data else 0 }}</span>
+                <span>Admins: {{ summary_data.admin_users if summary_data else 0 }}</span>
+            </div>
+        </div>
+        <div class="summary-stat-card">
+            <h3>Students</h3>
+            <div class="summary-stat-value">{{ summary_data.total_students if summary_data else 0 }}</div>
+            <div class="summary-stat-breakdown">
+                <span>Active: {{ summary_data.active_students if summary_data else 0 }}</span>
+            </div>
+        </div>
+        <div class="summary-stat-card">
+            <h3>Predictions</h3>
+            <div class="summary-stat-value">{{ summary_data.total_predictions if summary_data else 0 }}</div>
+            <div class="summary-stat-breakdown">
+                <span>Recent (7d): {{ summary_data.recent_predictions if summary_data else 0 }}</span>
+            </div>
+        </div>
+        <div class="summary-stat-card">
+            <h3>Activities</h3>
+            <div class="summary-stat-value">{{ summary_data.total_activities if summary_data else 0 }}</div>
+            <div class="summary-stat-breakdown">
+                <span>Recent (7d): {{ summary_data.recent_activities if summary_data else 0 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Distribution -->
+    {% if summary_data.departments %}
+    <div class="summary-section">
+        <h3>Student Distribution by Department</h3>
+        <div class="department-chart">
+            {% for dept in summary_data.departments %}
+            <div class="department-item">
+                <div class="department-name">{{ dept.department }}</div>
+                <div class="department-bar">
+                    <div class="department-fill" style="width: {{ (dept.count / summary_data.total_students * 100) if summary_data.total_students > 0 else 0 }}%"></div>
+                </div>
+                <div class="department-count">{{ dept.count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Activity Chart -->
+    {% if summary_data.recent_predictions_data %}
+    <div class="summary-section">
+        <h3>Predictions Trend (Last 30 Days)</h3>
+        <div class="chart-container">
+            <div class="chart-bars">
+                {% for data in summary_data.recent_predictions_data %}
+                <div class="chart-bar">
+                    <div class="bar-fill" style="height: {{ (data.count / 10) * 100 }}%"></div>
+                    <div class="bar-label">{{ data.date.strftime('%m-%d') if data.date else '' }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- System Health -->
+    <div class="summary-section">
+        <h3>System Health</h3>
+        <div class="health-indicators">
+            <div class="health-item">
+                <span class="health-label">Database Status</span>
+                <span class="health-status health-good">✓ Connected</span>
+            </div>
+            <div class="health-item">
+                <span class="health-label">Active Users</span>
+                <span class="health-status health-good">{{ summary_data.active_users if summary_data else 0 }}</span>
+            </div>
+            <div class="health-item">
+                <span class="health-label">Recent Activity</span>
+                <span class="health-status health-good">{{ summary_data.recent_activities if summary_data else 0 }} actions</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Management -->
+    <div class="summary-section">
+        <h3>Data Management</h3>
+        <div class="data-management-actions">
+            <form method="POST" action="/admin/update-averages" style="display: inline;">
+                <button type="submit" class="update-averages-btn" onclick="return confirm('This will recalculate all attendance and assignment reports and update student averages. Continue?')">
+                    <i class="fas fa-sync-alt"></i>
+                    Update All Averages
+                </button>
+            </form>
+            <p class="action-description">
+                Recalculates attendance and assignment percentages from reports tables and updates student records.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.admin-summary-container {
+    max-width: 1200px;
+    margin: 2.5rem auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(65,105,225,0.07);
+    padding: 2.5rem 2rem;
+}
+
+.summary-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.summary-stat-card {
+    background: #f9fbff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    border-left: 4px solid #4169E1;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.summary-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(65,105,225,0.15);
+}
+
+.summary-stat-card h3 {
+    color: #4169E1;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.summary-stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d3e50;
+    margin-bottom: 0.5rem;
+}
+
+.summary-stat-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.summary-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e3e8f0;
+}
+
+.summary-section h3 {
+    color: #4169E1;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.department-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.department-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: #f9fbff;
+    border-radius: 6px;
+}
+
+.department-name {
+    min-width: 120px;
+    font-weight: 500;
+    color: #4169E1;
+}
+
+.department-bar {
+    flex: 1;
+    height: 20px;
+    background: #e3e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.department-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4169E1, #667eea);
+    transition: width 0.3s ease;
+}
+
+.department-count {
+    min-width: 40px;
+    text-align: right;
+    font-weight: 600;
+    color: #2d3e50;
+}
+
+.chart-container {
+    background: #f9fbff;
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.chart-bars {
+    display: flex;
+    align-items: end;
+    gap: 0.5rem;
+    height: 200px;
+    padding-bottom: 2rem;
+}
+
+.chart-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bar-fill {
+    width: 100%;
+    background: linear-gradient(to top, #4169E1, #667eea);
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    transition: height 0.3s ease;
+}
+
+.bar-label {
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+}
+
+.health-indicators {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.health-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f9fbff;
+    border-radius: 8px;
+    border-left: 4px solid #4169E1;
+}
+
+.health-label {
+    font-weight: 500;
+    color: #4169E1;
+}
+
+.health-status {
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.health-good {
+    background: #d4edda;
+    color: #155724;
+}
+
+.health-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.health-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Data Management Styles */
+.data-management-actions {
+    text-align: center;
+    padding: 1.5rem;
+    background: #f9fbff;
+    border-radius: 8px;
+    border: 1px solid #e8f2ff;
+}
+
+.update-averages-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.update-averages-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.update-averages-btn i {
+    font-size: 1rem;
+}
+
+.action-description {
+    margin-top: 1rem;
+    color: #666;
+    font-size: 0.9rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 900px) {
+    .summary-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .health-indicators {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-bars {
+        height: 150px;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-summary-container {
+        padding: 1.5rem 1rem;
+    }
+    
+    .summary-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-stat-value {
+        font-size: 2rem;
+    }
+    
+    .department-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .department-name {
+        min-width: auto;
+    }
+    
+    .department-count {
+        min-width: auto;
+        text-align: left;
+    }
+}
+</style>
+{% endblock %} 

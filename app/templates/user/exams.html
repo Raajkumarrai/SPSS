@@ -1,0 +1,1221 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}Exam Management - SPPS{% endblock %}
+
+{% block content %}
+<div class="exams-container">
+    <div class="exams-header">
+        <h2 class="page-title">Exam Management</h2>
+        <p class="page-subtitle">Add exam scores for students. The latest exam score will override the previous score.
+        </p>
+    </div>
+
+    <!-- Add Exam Form -->
+    <div class="exam-form-section">
+        <h3 class="section-title">Add New Exam</h3>
+
+        <!-- Student Filters (Outside exam form - must be before exam form) -->
+        <div class="student-filters-container">
+            <form class="student-filters-form" method="get" action="{{ url_for('user_exams') }}" id="studentFilterForm">
+                <!-- Preserve exam table filters -->
+                {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+                {% if department_filter %}<input type="hidden" name="department" value="{{ department_filter }}">{%
+                endif %}
+                {% if year_filter %}<input type="hidden" name="year" value="{{ year_filter }}">{% endif %}
+                {% if exam_name_filter %}<input type="hidden" name="exam_name" value="{{ exam_name_filter }}">{% endif
+                %}
+                {% if date_from %}<input type="hidden" name="date_from" value="{{ date_from }}">{% endif %}
+                {% if date_to %}<input type="hidden" name="date_to" value="{{ date_to }}">{% endif %}
+                {% if sort_by %}<input type="hidden" name="sort_by" value="{{ sort_by }}">{% endif %}
+                {% if sort_order %}<input type="hidden" name="sort_order" value="{{ sort_order }}">{% endif %}
+
+                <div class="filter-row">
+                    <div class="filter-group search-group">
+                        <input type="text" name="student_search" id="student_search" value="{{ student_search }}"
+                            placeholder="Search students..." class="search-input" onkeyup="filterStudents()">
+                    </div>
+                    <div class="filter-group">
+                        <select name="student_department" id="student_department" class="filter-select"
+                            onchange="document.getElementById('studentFilterForm').submit()">
+                            <option value="">All Departments</option>
+                            {% for dept in student_departments %}
+                            <option value="{{ dept.department }}" {% if student_department_filter==dept.department
+                                %}selected{% endif %}>{{ dept.department }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <select name="student_year" id="student_year" class="filter-select"
+                            onchange="document.getElementById('studentFilterForm').submit()">
+                            <option value="">All Years</option>
+                            {% for yr in student_years %}
+                            <option value="{{ yr.year }}" {% if student_year_filter==yr.year %}selected{% endif %}>{{
+                                yr.year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button type="submit" class="btn-filter-small">Apply</button>
+                        <a href="{{ url_for('user_exams', search=search, department=department_filter, year=year_filter, exam_name=exam_name_filter, date_from=date_from, date_to=date_to, sort_by=sort_by, sort_order=sort_order) }}"
+                            class="btn-clear-filters-small">Clear</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <form method="POST" action="{{ url_for('user_exams') }}" class="exam-form" id="examForm">
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="exam_name">Exam Name:</label>
+                    <input type="text" id="exam_name" name="exam_name"
+                        placeholder="e.g. Midterm Exam, Final Exam, Quiz 1" required class="form-input">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="exam_date">Exam Date:</label>
+                    <input type="date" id="exam_date" name="exam_date" required class="form-input" value="{{ today }}">
+                </div>
+                <div class="form-group">
+                    <label for="max_score">Maximum Score:</label>
+                    <input type="number" id="max_score" name="max_score" min="1" step="0.01" value="100" required
+                        class="form-input">
+                    <small class="form-hint">Default: 100 (applies to all students)</small>
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="student_selection">Select Students and Enter Individual Scores:</label>
+                <small class="form-hint"
+                    style="display: block; margin-top: var(--space-xs); margin-bottom: var(--space-sm);">Check the box
+                    next to each student and enter their score. Each student must have their own score entered.</small>
+            </div>
+
+            <!-- Student Selection (Inside exam form) -->
+            <div class="form-group full-width">
+                <div class="student-selection-container">
+                    <div class="selection-controls">
+                        <!-- <button type="button" class="btn-select-all" onclick="selectAllStudents()">Select All</button>
+                        <button type="button" class="btn-deselect-all" onclick="deselectAllStudents()">Deselect All</button> -->
+                        <span class="student-count" id="studentCount">Showing {{ students|length }} student(s)</span>
+                    </div>
+                    <div class="students-list" id="studentsList">
+                        {% for student in students %}
+                        <div class="student-item-with-score" data-student-id="{{ student.id }}">
+                            <div class="student-row-container">
+                                <label class="student-checkbox-item">
+                                    <input type="checkbox" name="student_ids" value="{{ student.id }}"
+                                        class="student-checkbox" onchange="toggleStudentScore(this, {{ student.id }})">
+                                    <div class="student-info">
+                                        <span class="student-name">{{ student.name }}</span>
+                                        <span class="student-details">{{ student.student_id }} • {{ student.department
+                                            }} • {{ student.year }}</span>
+                                        <span class="student-score">Current Score: {{
+                                            "%.2f"|format(student.previous_score or 0) }}%</span>
+                                    </div>
+                                </label>
+                                <div class="student-score-input-inline" id="score_input_{{ student.id }}">
+                                    <label for="score_{{ student.id }}" class="score-label">Enter Score:</label>
+                                    <input type="number" id="score_{{ student.id }}" name="score_{{ student.id }}"
+                                        min="0" step="0.01" placeholder="0.00" class="form-input score-input-inline"
+                                        autocomplete="off">
+                                    <span class="score-hint"></span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not students %}
+                        <p class="no-students">No active students found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Add Exam</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Recent Exams Table -->
+    <div class="recent-exams-section">
+        <h3 class="section-title">Recent Exams</h3>
+
+        <!-- Filters -->
+        <div class="exams-filters-container">
+            <form class="exams-filters-form" method="get" action="">
+                <div class="filter-row">
+                    <div class="filter-group search-group">
+                        <input type="text" name="search" value="{{ search }}"
+                            placeholder="Search by student name, ID, or exam name..." class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <select name="department" class="filter-select">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.department }}" {% if department_filter==dept.department %}selected{%
+                                endif %}>{{ dept.department }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <select name="year" class="filter-select">
+                            <option value="">All Years</option>
+                            {% for yr in years %}
+                            <option value="{{ yr.year }}" {% if year_filter==yr.year %}selected{% endif %}>{{ yr.year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <select name="exam_name" class="filter-select">
+                            <option value="">All Exam Names</option>
+                            {% for exam in exam_names %}
+                            <option value="{{ exam.exam_name }}" {% if exam_name_filter==exam.exam_name %}selected{%
+                                endif %}>{{ exam.exam_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="date_from" class="filter-label">From Date:</label>
+                        <input type="date" name="date_from" id="date_from" value="{{ date_from }}" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label for="date_to" class="filter-label">To Date:</label>
+                        <input type="date" name="date_to" id="date_to" value="{{ date_to }}" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <select name="sort_by" class="filter-select">
+                            <option value="exam_date" {% if sort_by=='exam_date' %}selected{% endif %}>Sort by Date
+                            </option>
+                            <option value="exam_name" {% if sort_by=='exam_name' %}selected{% endif %}>Sort by Exam Name
+                            </option>
+                            <option value="student_name" {% if sort_by=='student_name' %}selected{% endif %}>Sort by
+                                Student Name</option>
+                            <option value="percentage" {% if sort_by=='percentage' %}selected{% endif %}>Sort by
+                                Percentage</option>
+                            <option value="score" {% if sort_by=='score' %}selected{% endif %}>Sort by Score</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <select name="sort_order" class="filter-select">
+                            <option value="DESC" {% if sort_order=='DESC' %}selected{% endif %}>Descending</option>
+                            <option value="ASC" {% if sort_order=='ASC' %}selected{% endif %}>Ascending</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button type="submit" class="btn-filter">Apply Filters</button>
+                        <a href="{{ url_for('user_exams') }}" class="btn-clear-filters">Clear Filters</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if recent_exams %}
+        <div class="exams-count">
+            <p>Showing {{ recent_exams|length }} exam(s)</p>
+        </div>
+        <div class="table-container">
+            <table class="exams-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Exam Name</th>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Marks Obtained</th>
+                        <th>Max Score</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in recent_exams %}
+                    <tr>
+                        <td>{{ exam.exam_date.strftime('%Y-%m-%d') if exam.exam_date else 'N/A' }}</td>
+                        <td>{{ exam.exam_name or 'N/A' }}</td>
+                        <td>{{ exam.student_id }}</td>
+                        <td>{{ exam.student_name or 'N/A' }}</td>
+                        <td>{{ exam.department or 'N/A' }}</td>
+                        <td>{{ exam.year or 'N/A' }}</td>
+                        <td class="marks-obtained">{{ "%.2f"|format(exam.score) if exam.score is not none else 'N/A' }}
+                        </td>
+                        <td>{{ "%.2f"|format(exam.max_score) if exam.max_score is not none else 'N/A' }}</td>
+                        <td>
+                            {% if exam.percentage is not none %}
+                            <span
+                                class="percentage-badge percentage-{{ 'excellent' if exam.percentage >= 90 else 'good' if exam.percentage >= 80 else 'average' if exam.percentage >= 60 else 'poor' }}">
+                                {{ "%.2f"|format(exam.percentage) }}%
+                            </span>
+                            {% else %}
+                            <span class="percentage-badge percentage-poor">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-exams">
+            <p>No exams recorded yet. Add your first exam above!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Futuristic Exam Management Page */
+    .exams-container {
+        max-width: 1400px;
+        margin: 3rem auto;
+        padding: 0 var(--space-xl);
+    }
+
+    .exams-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-title {
+        color: var(--text-primary);
+        margin-bottom: var(--space-sm);
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .exam-form-section,
+    .recent-exams-section {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-2xl);
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: var(--space-2xl);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .exam-form-section::before,
+    .recent-exams-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        opacity: 0.8;
+    }
+
+    .section-title {
+        color: var(--text-primary);
+        margin-bottom: var(--space-lg);
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .exam-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-lg);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--space-md);
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: var(--space-md);
+        background: var(--bg-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-lg);
+        font-size: 1rem;
+        color: var(--text-primary);
+        transition: all var(--transition-normal);
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow:
+            0 0 0 3px rgba(0, 212, 255, 0.1),
+            0 0 20px rgba(0, 212, 255, 0.2);
+        background: var(--bg-primary);
+    }
+
+    .form-input::placeholder {
+        color: var(--text-tertiary);
+    }
+
+    .form-hint {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-top: var(--space-xs);
+        display: block;
+        font-style: italic;
+    }
+
+    /* Student Filters */
+    .student-filters-container {
+        margin-bottom: var(--space-md);
+        padding: var(--space-md);
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(0, 212, 255, 0.15);
+    }
+
+    .student-filters-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .student-filters-form .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+        align-items: center;
+    }
+
+    .student-filters-form .filter-group {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .student-filters-form .filter-group.search-group {
+        flex: 2;
+        min-width: 200px;
+    }
+
+    .btn-filter-small,
+    .btn-clear-filters-small {
+        padding: var(--space-xs) var(--space-md);
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        border: none;
+        margin-right: var(--space-xs);
+    }
+
+    .btn-filter-small {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: var(--text-primary);
+        box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
+    }
+
+    .btn-filter-small:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-clear-filters-small {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-clear-filters-small:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--text-primary);
+    }
+
+    .student-count {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-left: var(--space-md);
+        padding: var(--space-xs) var(--space-sm);
+        background: rgba(0, 212, 255, 0.1);
+        border-radius: var(--radius-sm);
+    }
+
+    .student-selection-container {
+        background: var(--bg-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-lg);
+        padding: var(--space-md);
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .selection-controls {
+        display: flex;
+        gap: var(--space-md);
+        margin-bottom: var(--space-md);
+        flex-wrap: wrap;
+    }
+
+    .btn-select-all,
+    .btn-deselect-all {
+        padding: var(--space-sm) var(--space-md);
+        background: var(--bg-tertiary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        font-size: 0.9rem;
+    }
+
+    .btn-select-all:hover,
+    .btn-deselect-all:hover {
+        background: var(--bg-quaternary);
+        border-color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .search-input {
+        flex: 1;
+        min-width: 200px;
+        padding: var(--space-sm) var(--space-md);
+        background: var(--bg-tertiary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: var(--bg-primary);
+    }
+
+    .students-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .student-checkbox-item {
+        display: flex;
+        align-items: center;
+        padding: var(--space-md);
+        background: var(--bg-tertiary);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all var(--transition-normal);
+    }
+
+    .student-checkbox-item:hover {
+        background: var(--bg-quaternary);
+        border-color: var(--primary);
+        transform: translateX(4px);
+    }
+
+    .student-checkbox-item input[type="checkbox"] {
+        margin-right: var(--space-md);
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--primary);
+    }
+
+    .student-item-with-score {
+        margin-bottom: var(--space-md);
+    }
+
+    .student-row-container {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        flex-wrap: wrap;
+    }
+
+    .student-checkbox-item {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .student-score-input-inline {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-md) var(--space-lg);
+        background: rgba(0, 212, 255, 0.15);
+        border: 2px solid rgba(0, 212, 255, 0.4);
+        border-radius: var(--radius-md);
+        min-width: 200px;
+        box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
+        transition: all var(--transition-normal);
+    }
+
+    .student-score-input-inline:hover {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+    }
+
+    .student-score-input-inline .score-label {
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        font-weight: 600;
+        white-space: nowrap;
+        margin: 0;
+    }
+
+    .student-score-input-inline .score-input-inline {
+        flex: 1;
+        min-width: 120px;
+        max-width: 150px;
+        padding: var(--space-sm) var(--space-md);
+        font-size: 1rem;
+        font-weight: 600;
+        text-align: center;
+        background: var(--bg-secondary);
+        border: 2px solid var(--primary);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        transition: all var(--transition-normal);
+    }
+
+    .student-score-input-inline .score-input-inline:hover {
+        border-color: var(--accent);
+        box-shadow: 0 0 8px rgba(0, 255, 150, 0.2);
+    }
+
+    .student-score-input-inline .score-input-inline:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 10px rgba(0, 255, 150, 0.3);
+        background: rgba(0, 255, 150, 0.05);
+    }
+
+    .student-score-input-inline .score-hint {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        white-space: nowrap;
+        margin-left: var(--space-xs);
+    }
+
+    .student-info {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+        flex: 1;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+
+    .student-details {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .student-score {
+        font-size: 0.85rem;
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+    .no-students {
+        text-align: center;
+        padding: var(--space-xl);
+        color: var(--text-secondary);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: var(--space-lg);
+    }
+
+    .btn-submit {
+        padding: var(--space-md) var(--space-2xl);
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: var(--text-inverse);
+        border: none;
+        border-radius: var(--radius-lg);
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left var(--transition-slow);
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-2xl), var(--glow-primary);
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    /* Filters Section */
+    .exams-filters-container {
+        margin-bottom: var(--space-xl);
+        padding: var(--space-lg);
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+
+    .exams-filters-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-md);
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .filter-group.search-group {
+        flex: 2;
+        min-width: 250px;
+    }
+
+    .filter-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+    }
+
+    .filter-input,
+    .filter-select,
+    .search-input {
+        padding: var(--space-sm) var(--space-md);
+        background: var(--bg-secondary);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        transition: all var(--transition-normal);
+    }
+
+    .filter-input:focus,
+    .filter-select:focus,
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        background: rgba(0, 212, 255, 0.05);
+    }
+
+    .filter-select {
+        cursor: pointer;
+    }
+
+    .btn-filter,
+    .btn-clear-filters {
+        padding: var(--space-sm) var(--space-lg);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        border: none;
+    }
+
+    .btn-filter {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: var(--text-primary);
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+    }
+
+    .btn-clear-filters {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-clear-filters:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .exams-count {
+        margin-bottom: var(--space-md);
+        padding: var(--space-sm) var(--space-md);
+        background: rgba(0, 212, 255, 0.1);
+        border-radius: var(--radius-md);
+        border-left: 3px solid var(--primary);
+    }
+
+    .exams-count p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: var(--radius-lg);
+    }
+
+    .exams-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .exams-table th,
+    .exams-table td {
+        padding: var(--space-md);
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-primary) !important;
+    }
+
+    .exams-table th {
+        background: var(--bg-tertiary);
+        font-weight: 600;
+        color: var(--text-primary) !important;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+    }
+
+    .exams-table tbody tr {
+        transition: all var(--transition-normal);
+    }
+
+    .exams-table tbody tr:hover {
+        background: var(--bg-tertiary);
+        transform: translateX(4px);
+    }
+
+    .percentage-badge {
+        padding: var(--space-xs) var(--space-md);
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .percentage-excellent {
+        background: linear-gradient(135deg, var(--success), var(--success-light));
+        color: var(--text-inverse);
+        box-shadow: 0 2px 8px var(--success-glow);
+    }
+
+    .percentage-good {
+        background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+        color: var(--text-inverse);
+        box-shadow: 0 2px 8px var(--secondary-glow);
+    }
+
+    .percentage-average {
+        background: linear-gradient(135deg, var(--warning), var(--warning-light));
+        color: var(--text-inverse);
+        box-shadow: 0 2px 8px var(--warning-glow);
+    }
+
+    .percentage-poor {
+        background: linear-gradient(135deg, var(--error), #e74c3c);
+        color: var(--text-inverse);
+        box-shadow: 0 2px 8px var(--error-glow);
+    }
+
+    .no-exams {
+        text-align: center;
+        padding: var(--space-3xl);
+        color: var(--text-secondary);
+    }
+
+    .no-exams p {
+        font-size: 1.1rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .exams-container {
+            padding: 0 var(--space-md);
+            margin: 2rem auto;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .exam-form-section,
+        .recent-exams-section {
+            padding: var(--space-xl);
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .selection-controls {
+            flex-direction: column;
+        }
+
+        .search-input {
+            width: 100%;
+        }
+
+        .exams-table {
+            font-size: 0.8rem;
+        }
+
+        .exams-table th,
+        .exams-table td {
+            padding: var(--space-sm);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set today's date as default
+    document.addEventListener('DOMContentLoaded', function () {
+        const examDateInput = document.getElementById('exam_date');
+        if (examDateInput && !examDateInput.value) {
+            const today = new Date().toISOString().split('T')[0];
+            examDateInput.value = today;
+        }
+    });
+
+    function toggleStudentScore(checkbox, studentId) {
+        const scoreInputDiv = document.getElementById('score_input_' + studentId);
+        const scoreInput = document.getElementById('score_' + studentId);
+        const maxScore = document.getElementById('max_score') ? parseFloat(document.getElementById('max_score').value) : 100;
+
+        // Update the max score hint and max attribute
+        const scoreHint = scoreInputDiv.querySelector('.score-hint');
+        if (scoreHint) {
+            scoreHint.textContent = '/ ' + maxScore;
+        }
+        scoreInput.max = maxScore;
+
+        // If checkbox is checked, focus on the input
+        if (checkbox.checked) {
+            scoreInput.focus();
+        }
+    }
+
+    // Update score hints when max_score changes
+    document.addEventListener('DOMContentLoaded', function () {
+        const maxScoreInput = document.getElementById('max_score');
+        if (maxScoreInput) {
+            maxScoreInput.addEventListener('input', function () {
+                const maxScore = parseFloat(this.value) || 100;
+                // Update all score inputs (both enabled and disabled)
+                const allScoreInputs = document.querySelectorAll('.score-input-inline');
+                allScoreInputs.forEach(input => {
+                    const scoreHint = input.parentElement.querySelector('.score-hint');
+                    if (scoreHint) {
+                        input.max = maxScore;
+                        scoreHint.textContent = '/ ' + maxScore;
+                    }
+                });
+            });
+        }
+    });
+
+    function selectAllStudents() {
+        // Only select visible students (not hidden by filter)
+        const studentItems = document.querySelectorAll('.student-item-with-score');
+        let selectedCount = 0;
+        studentItems.forEach(item => {
+            // Check if item is visible (not hidden by CSS or inline style)
+            const isVisible = item.offsetParent !== null && item.style.display !== 'none';
+            if (isVisible) {
+                const checkbox = item.querySelector('.student-checkbox');
+                if (checkbox && !checkbox.checked) {
+                    checkbox.checked = true;
+                    const studentId = checkbox.value;
+                    toggleStudentScore(checkbox, studentId);
+                    selectedCount++;
+                }
+            }
+        });
+        console.log(`Selected ${selectedCount} visible student(s)`);
+        // Update student count display
+        updateStudentCount();
+    }
+
+    function deselectAllStudents() {
+        // Deselect all checkboxes (both visible and hidden)
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        let deselectedCount = 0;
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                const studentId = checkbox.value;
+                toggleStudentScore(checkbox, studentId);
+                deselectedCount++;
+            }
+        });
+        console.log(`Deselected ${deselectedCount} student(s)`);
+        // Update student count display
+        updateStudentCount();
+    }
+
+    function updateStudentCount() {
+        const studentItems = document.querySelectorAll('.student-item-with-score');
+        let visibleCount = 0;
+        studentItems.forEach(item => {
+            const isVisible = item.offsetParent !== null && item.style.display !== 'none';
+            if (isVisible) {
+                visibleCount++;
+            }
+        });
+        const countElement = document.getElementById('studentCount');
+        if (countElement) {
+            countElement.textContent = `Showing ${visibleCount} student(s)`;
+        }
+    }
+
+    // Initialize max score hints on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        const maxScore = document.getElementById('max_score') ? parseFloat(document.getElementById('max_score').value) : 100;
+        const scoreInputs = document.querySelectorAll('.score-input-inline');
+        scoreInputs.forEach(input => {
+            input.max = maxScore;
+            const scoreHint = input.parentElement.querySelector('.score-hint');
+            if (scoreHint) {
+                scoreHint.textContent = '/ ' + maxScore;
+            }
+        });
+    });
+
+    function filterStudents() {
+        const searchInput = document.getElementById('student_search');
+        const filter = searchInput ? searchInput.value.toLowerCase() : '';
+        const studentItems = document.querySelectorAll('.student-item-with-score');
+
+        studentItems.forEach(item => {
+            const studentName = item.querySelector('.student-name')?.textContent.toLowerCase() || '';
+            const studentDetails = item.querySelector('.student-details')?.textContent.toLowerCase() || '';
+            const studentId = item.querySelector('input.student-checkbox')?.value || '';
+
+            // Client-side filtering (for search only, department/year filters are server-side)
+            if (filter === '' || studentName.includes(filter) || studentDetails.includes(filter) || studentId.includes(filter)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Update student count
+        updateStudentCount();
+    }
+
+    // Form validation
+    const examForm = document.getElementById('examForm');
+    if (examForm) {
+        examForm.addEventListener('submit', function (e) {
+            // Only check visible checkboxes (in case some are hidden by filter)
+            const allCheckboxes = document.querySelectorAll('.student-checkbox:checked');
+            const selectedStudents = Array.from(allCheckboxes).filter(checkbox => {
+                const item = checkbox.closest('.student-item-with-score');
+                // Check if item is visible (not hidden by CSS or inline style)
+                const isVisible = item && (item.offsetParent !== null && item.style.display !== 'none');
+                return isVisible;
+            });
+
+            if (selectedStudents.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one student.');
+                return false;
+            }
+
+            const maxScoreInput = document.getElementById('max_score');
+            const maxScore = maxScoreInput ? (parseFloat(maxScoreInput.value) || 100) : 100;
+            let hasError = false;
+            let errorMessage = '';
+            let missingScores = [];
+
+            // Debug logging
+            console.log('Form submission - Selected students:', selectedStudents.length);
+            console.log('Max score:', maxScore);
+
+            // Validate each selected student's score
+            selectedStudents.forEach(checkbox => {
+                const studentId = checkbox.value;
+                const scoreInput = document.getElementById('score_' + studentId);
+
+                // Check if score input exists
+                if (!scoreInput) {
+                    hasError = true;
+                    const studentName = checkbox.closest('.student-item-with-score')?.querySelector('.student-name')?.textContent || `Student ID ${studentId}`;
+                    missingScores.push(studentName);
+                    return;
+                }
+
+                const scoreValue = scoreInput.value.trim();
+                if (!scoreValue) {
+                    hasError = true;
+                    const studentName = checkbox.closest('.student-item-with-score')?.querySelector('.student-name')?.textContent || `Student ID ${studentId}`;
+                    missingScores.push(studentName);
+                    return;
+                }
+
+                const score = parseFloat(scoreValue);
+                if (isNaN(score)) {
+                    hasError = true;
+                    const studentName = checkbox.closest('.student-item-with-score')?.querySelector('.student-name')?.textContent || `Student ID ${studentId}`;
+                    errorMessage = `Invalid score for ${studentName}. Please enter a valid number.`;
+                    return;
+                }
+
+                if (score < 0) {
+                    hasError = true;
+                    errorMessage = 'Score cannot be negative.';
+                    return;
+                }
+
+                if (score > maxScore) {
+                    hasError = true;
+                    const studentName = checkbox.closest('.student-item-with-score')?.querySelector('.student-name')?.textContent || `Student ID ${studentId}`;
+                    errorMessage = `Score for ${studentName} (${score}) cannot exceed maximum score (${maxScore}).`;
+                    return;
+                }
+            });
+
+            if (missingScores.length > 0) {
+                e.preventDefault();
+                alert(`Please enter scores for the following students:\n${missingScores.join(', ')}`);
+                // Focus on first missing score input
+                const firstMissing = selectedStudents[0];
+                const firstStudentId = firstMissing.value;
+                const firstScoreInput = document.getElementById('score_' + firstStudentId);
+                if (firstScoreInput) {
+                    const scoreInputDiv = document.getElementById('score_input_' + firstStudentId);
+                    if (scoreInputDiv) {
+                        scoreInputDiv.style.display = 'flex';
+                    }
+                    firstScoreInput.focus();
+                }
+                return false;
+            }
+
+            if (hasError) {
+                e.preventDefault();
+                alert(errorMessage);
+                return false;
+            }
+
+            // Debug: Log form data before submission
+            console.log('Form submitting with data:');
+            const formData = {
+                exam_name: document.getElementById('exam_name')?.value,
+                exam_date: document.getElementById('exam_date')?.value,
+                max_score: maxScore,
+                student_ids: Array.from(selectedStudents).map(cb => cb.value),
+                scores: {}
+            };
+            selectedStudents.forEach(checkbox => {
+                const studentId = checkbox.value;
+                const scoreInput = document.getElementById('score_' + studentId);
+                if (scoreInput) {
+                    formData.scores[studentId] = scoreInput.value;
+                }
+            });
+            console.log('Form data:', formData);
+
+            // Allow form submission - don't prevent default
+            // Form will submit normally via POST to the server
+            return true;
+        });
+    }
+
+    // Ensure filter form doesn't interfere with exam form
+    document.addEventListener('DOMContentLoaded', function () {
+        const studentFilterForm = document.getElementById('studentFilterForm');
+        if (studentFilterForm) {
+            studentFilterForm.addEventListener('submit', function (e) {
+                // This form should submit normally - no prevention needed
+                console.log('Student filter form submitting...');
+            });
+        }
+    });
+</script>
+{% endblock %}

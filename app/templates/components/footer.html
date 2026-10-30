@@ -1,0 +1,109 @@
+<!-- Futuristic Footer Component -->
+<footer class="futuristic-footer">
+    <div class="footer-background">
+        <div class="footer-particles"></div>
+    </div>
+    <div class="footer-container">
+        <div class="footer-section">
+            <div class="footer-icon">
+                <i class="bi bi-info-circle"></i>
+            </div>
+            <h3>About SPPS</h3>
+            <ul>
+                <li><a href="/about">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>About Us</span>
+                    </a></li>
+                <li><a href="/contact">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Contact</span>
+                    </a></li>
+                <li><a href="/privacy">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Privacy Policy</span>
+                    </a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <div class="footer-icon"
+                style="background: linear-gradient(135deg, var(--secondary), var(--secondary-light));">
+                <i class="bi bi-book"></i>
+            </div>
+            <h3>Resources</h3>
+            <ul>
+                <li><a href="/how_it_works">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>How It Works</span>
+                    </a></li>
+                <li><a href="/documentation">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Documentation</span>
+                    </a></li>
+                <li><a href="/faq">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>FAQ</span>
+                    </a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <div class="footer-icon" style="background: linear-gradient(135deg, var(--accent), var(--accent-light));">
+                <i class="bi bi-people"></i>
+            </div>
+            <h3>Connect</h3>
+            <ul>
+                <li><a href="https://twitter.com" target="_blank">
+                        <i class="bi bi-twitter"></i>
+                        <span>Twitter</span>
+                    </a></li>
+                <li><a href="https://linkedin.com" target="_blank">
+                        <i class="bi bi-linkedin"></i>
+                        <span>LinkedIn</span>
+                    </a></li>
+                <li><a href="https://github.com" target="_blank">
+                        <i class="bi bi-github"></i>
+                        <span>GitHub</span>
+                    </a></li>
+            </ul>
+        </div>
+        {% if session.get('user_id') and session.get('role') != 'admin' %}
+        <div class="footer-section">
+            <div class="footer-icon" style="background: linear-gradient(135deg, var(--purple), var(--purple-light));">
+                <i class="bi bi-lightning"></i>
+            </div>
+            <h3>Quick Access</h3>
+            <ul>
+                <li><a href="/user/home">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>User Dashboard</span>
+                    </a></li>
+                <li><a href="/predict">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Make Prediction</span>
+                    </a></li>
+                <li><a href="/user/students">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>View Students</span>
+                    </a></li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    <div class="footer-bottom">
+        <div class="footer-bottom-content">
+            <div class="footer-logo">
+                <div class="footer-logo-icon">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div class="footer-logo-text">
+                    <span class="footer-logo-main">SPPS</span>
+                    <span class="footer-logo-sub">ML Analytics</span>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <!-- <p>&copy; 2024 Student Performance Prediction System. Powered by AI.</p> -->
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Futuristic styles are now in the main CSS file -->

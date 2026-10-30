@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="lr-result-container">
+    <div class="lr-result-header">
+        <h2 class="page-title">Linear Regression Prediction Result</h2>
+        <p class="page-subtitle">Student performance prediction using custom Linear Regression model</p>
+    </div>
+
+    <!-- Main Prediction Card -->
+    <div class="lr-result-card">
+        <h3 class="section-title">Prediction Result</h3>
+        <div class="lr-student-info">
+            <span class="lr-student-name">Student: <strong>{{ student_name }}</strong></span>
+        </div>
+        <div class="lr-predicted-score">
+            <span class="score-label">Predicted Score:</span>
+            <span class="score-value">{{ predicted_score }}%</span>
+        </div>
+        <div class="lr-risk-status">
+            <span class="risk-label">Risk Status:</span>
+            <span class="risk-value risk-{{ risk.lower().replace(' ', '-') }}">{{ risk }}</span>
+        </div>
+    </div>
+
+    <!-- Student Details Card -->
+    <div class="lr-details-card">
+        <h3 class="section-title">Student Information</h3>
+        <div class="lr-details-grid">
+            <div class="lr-detail-item">
+                <span class="detail-label">Department:</span>
+                <span class="detail-value">{{ department }}</span>
+            </div>
+            <div class="lr-detail-item">
+                <span class="detail-label">Academic Year:</span>
+                <span class="detail-value">{{ year }}</span>
+            </div>
+            <div class="lr-detail-item">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">{{ status }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Metrics Card -->
+    <div class="lr-metrics-card">
+        <h3 class="section-title">Input Metrics</h3>
+        <div class="lr-metrics-grid">
+            <div class="lr-metric-item">
+                <span class="metric-label">Attendance:</span>
+                <span class="metric-value">{{ attendance }}%</span>
+            </div>
+            <div class="lr-metric-item">
+                <span class="metric-label">Assignment:</span>
+                <span class="metric-value">{{ assignment }}%</span>
+            </div>
+            <div class="lr-metric-item">
+                <span class="metric-label">Study Time:</span>
+                <span class="metric-value">{{ study_time }} hrs</span>
+            </div>
+            <div class="lr-metric-item">
+                <span class="metric-label">Previous Score:</span>
+                <span class="metric-value">{{ previous_score }}%</span>
+            </div>
+            <div class="lr-metric-item">
+                <span class="metric-label">Extracurricular:</span>
+                <span class="metric-value">{{ extracurricular }}%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="lr-action-buttons">
+        <a href="/linear-regression" class="lr-btn-primary">Predict Another Student</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Futuristic Linear Regression Result Page */
+    .lr-result-container {
+        max-width: 1000px;
+        margin: 3rem auto;
+        padding: 0 var(--space-xl);
+        position: relative;
+    }
+
+    .lr-result-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-title {
+        color: var(--text-primary);
+        margin-bottom: var(--space-sm);
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .lr-result-card,
+    .lr-details-card,
+    .lr-metrics-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-2xl);
+        box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: var(--space-2xl);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .lr-result-card::before,
+    .lr-details-card::before,
+    .lr-metrics-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        opacity: 0.8;
+    }
+
+    .lr-result-card {
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+    }
+
+    .section-title {
+        color: var(--text-primary);
+        margin-bottom: var(--space-lg);
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .lr-student-info {
+        margin-bottom: var(--space-lg);
+        font-size: 1.05rem;
+        color: var(--text-primary);
+        background: rgba(0, 212, 255, 0.1);
+        border-radius: var(--radius-md);
+        padding: var(--space-sm) var(--space-md);
+        font-weight: 500;
+        display: inline-block;
+        border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+
+    .lr-student-name strong {
+        color: var(--primary);
+    }
+
+    .lr-predicted-score {
+        margin: var(--space-xl) 0;
+        padding: var(--space-lg);
+        background: rgba(0, 212, 255, 0.05);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+
+    .score-label {
+        display: block;
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--space-sm);
+        font-weight: 600;
+    }
+
+    .score-value {
+        display: block;
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--primary);
+        text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+
+    .lr-risk-status {
+        margin-top: var(--space-lg);
+        padding: var(--space-md);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+    }
+
+    .risk-label {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--space-xs);
+    }
+
+    .risk-value {
+        display: block;
+        font-size: 1.3rem;
+        font-weight: 700;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-md);
+    }
+
+    .risk-high,
+    .risk-high-risk {
+        color: var(--error);
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .risk-low,
+    .risk-low-risk {
+        color: var(--success);
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .risk-medium,
+    .risk-medium-risk {
+        color: var(--warning);
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    /* Details Card */
+    .lr-details-card {
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .lr-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-md);
+    }
+
+    .lr-detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+        padding: var(--space-md);
+        background: rgba(0, 212, 255, 0.05);
+        border-radius: var(--radius-md);
+        border-left: 3px solid var(--primary);
+        transition: all var(--transition-normal);
+    }
+
+    .lr-detail-item:hover {
+        background: rgba(0, 212, 255, 0.1);
+        transform: translateX(4px);
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 1.05rem;
+    }
+
+    /* Metrics Card */
+    .lr-metrics-card {
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .lr-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-md);
+    }
+
+    .lr-metric-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-md);
+        background: rgba(0, 212, 255, 0.05);
+        border-radius: var(--radius-md);
+        border-left: 3px solid var(--secondary);
+        transition: all var(--transition-normal);
+    }
+
+    .lr-metric-item:hover {
+        background: rgba(0, 212, 255, 0.1);
+        transform: translateX(4px);
+    }
+
+    .metric-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .metric-value {
+        font-weight: 600;
+        color: var(--secondary);
+        font-size: 1.05rem;
+    }
+
+    /* Action Buttons */
+    .lr-action-buttons {
+        text-align: center;
+        margin-top: var(--space-2xl);
+        display: flex;
+        gap: var(--space-md);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .lr-btn-primary {
+        display: inline-block;
+        padding: var(--space-lg) var(--space-2xl);
+        border-radius: var(--radius-lg);
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: all var(--transition-normal);
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: var(--text-inverse);
+        border: none;
+        min-width: 200px;
+    }
+
+    .lr-btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .lr-btn-primary:hover::before {
+        left: 100%;
+    }
+
+    .lr-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0, 212, 255, 0.4), var(--glow-primary);
+        color: var(--text-inverse);
+        text-decoration: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .lr-result-container {
+            padding: 0 var(--space-md);
+            margin: 2rem auto;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+        }
+        
+        .lr-result-card,
+        .lr-details-card,
+        .lr-metrics-card {
+            padding: var(--space-xl);
+        }
+        
+        .score-value {
+            font-size: 2.5rem;
+        }
+        
+        .lr-details-grid,
+        .lr-metrics-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .lr-action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .lr-btn-primary {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-title {
+            font-size: 1.8rem;
+        }
+        
+        .score-value {
+            font-size: 2rem;
+        }
+        
+        .lr-result-card,
+        .lr-details-card,
+        .lr-metrics-card {
+            padding: var(--space-lg);
+        }
+    }
+</style>
+{% endblock %}

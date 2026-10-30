@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}View Attendance Records - SPPS{% endblock %}
+
+{% block content %}
+<div class="attendance-view-container">
+    <div class="attendance-header">
+        <h2 class="page-title">View Attendance Records</h2>
+        <p class="attendance-subtitle">View and filter student attendance records</p>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="GET" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="student_id">Student ID:</label>
+                    <input type="text" id="student_id" name="student_id" value="{{ filters.student_id }}" placeholder="Enter student ID">
+                </div>
+                <div class="filter-group">
+                    <label for="department">Department:</label>
+                    <select id="department" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.department }}" {% if filters.department == dept.department %}selected{% endif %}>
+                            {{ dept.department }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="year">Year:</label>
+                    <select id="year" name="year">
+                        <option value="">All Years</option>
+                        {% for yr in years %}
+                        <option value="{{ yr.year }}" {% if filters.year == yr.year %}selected{% endif %}>
+                            {{ yr.year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ filters.start_date }}">
+                </div>
+                <div class="filter-group">
+                    <label for="end_date">End Date:</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ filters.end_date }}">
+                </div>
+                <div class="filter-group">
+                    <label for="status">Status:</label>
+                    <select id="status" name="status">
+                        <option value="">All Status</option>
+                        <option value="present" {% if filters.status == 'present' %}selected{% endif %}>Present</option>
+                        <option value="absent" {% if filters.status == 'absent' %}selected{% endif %}>Absent</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn-primary">Apply Filters</button>
+                <a href="/user/attendance/view" class="btn-secondary">Clear Filters</a>
+                <a href="/user/attendance/export?{{ request.query_string.decode() }}" class="btn-export">Export to Excel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    <div class="records-section">
+        <div class="records-header">
+            <h3>Attendance Records ({{ records|length }} records)</h3>
+        </div>
+        
+        {% if records %}
+        <div class="table-container">
+            <table class="records-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                        <th>Marked At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.date.strftime('%Y-%m-%d') if record.date else 'N/A' }}</td>
+                        <td>{{ record.student_id }}</td>
+                        <td>{{ record.student_name }}</td>
+                        <td>{{ record.department }}</td>
+                        <td>{{ record.year }}</td>
+                        <td>
+                            <span class="status-badge status-{{ record.status }}">
+                                {{ record.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ record.notes or 'N/A' }}</td>
+                        <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M') if record.created_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-records">
+            <p>No attendance records found matching the current filters.</p>
+            <a href="/user/attendance/view" class="btn-primary">View All Records</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic Attendance View Page */
+.attendance-view-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: 0 var(--space-xl);
+}
+
+.attendance-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.page-title {
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.attendance-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.filter-section {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0.8;
+}
+
+.filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: var(--space-md);
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+    font-family: inherit;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.filter-group select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.filter-actions {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-export {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-slow);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--bg-quaternary), var(--bg-tertiary));
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-quaternary));
+    transform: translateY(-2px);
+    border-color: var(--text-secondary);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-export {
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-export::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-slow);
+}
+
+.btn-export:hover {
+    background: linear-gradient(135deg, var(--secondary-light), var(--secondary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-secondary);
+}
+
+.btn-export:hover::before {
+    left: 100%;
+}
+
+.records-section {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.records-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0.8;
+}
+
+.records-header {
+    margin-bottom: var(--space-lg);
+}
+
+.records-header h3 {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+}
+
+.records-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.records-table th,
+.records-table td {
+    padding: var(--space-md);
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary) !important;
+}
+
+.records-table th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary) !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+.records-table td {
+    color: var(--text-primary) !important;
+}
+
+.records-table td:not(.status-badge):not(.status-badge *) {
+    color: var(--text-primary) !important;
+}
+
+.records-table td * {
+    color: var(--text-primary) !important;
+}
+
+.records-table tbody tr {
+    transition: all var(--transition-normal);
+}
+
+.records-table tbody tr:hover {
+    background: var(--bg-tertiary);
+    transform: translateX(4px);
+}
+
+.records-table tbody tr:hover td {
+    color: var(--text-primary) !important;
+}
+
+.records-table tbody tr:hover td * {
+    color: var(--text-primary) !important;
+}
+
+.status-badge {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+.status-present {
+    background: linear-gradient(135deg, var(--success), var(--success-light));
+    color: var(--text-inverse);
+    box-shadow: 0 2px 8px var(--success-glow);
+}
+
+.status-absent {
+    background: linear-gradient(135deg, var(--error), #e74c3c);
+    color: var(--text-inverse);
+    box-shadow: 0 2px 8px var(--error-glow);
+}
+
+.no-records {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--text-secondary);
+}
+
+.no-records p {
+    margin-bottom: var(--space-lg);
+    font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .attendance-view-container {
+        padding: 0 var(--space-md);
+        margin: 2rem auto;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .filter-section,
+    .records-section {
+        padding: var(--space-xl);
+    }
+    
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-actions {
+        justify-content: center;
+        flex-direction: column;
+    }
+    
+    .btn-primary,
+    .btn-secondary,
+    .btn-export {
+        width: 100%;
+    }
+    
+    .records-table {
+        font-size: 0.8rem;
+    }
+    
+    .records-table th,
+    .records-table td {
+        padding: var(--space-sm);
+    }
+}
+</style>
+{% endblock %}

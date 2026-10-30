@@ -1,0 +1,1334 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/admin_header.html' %}{% endblock %}
+
+{% block title %}Assignment Management - SPPS{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="assignment-container">
+    <h2>Assignment Management</h2>
+    <p class="assignment-description">Manage student assignment completion for {{ current_month }}</p>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="action-card">
+            <h3>Specific Date's Assignment</h3>
+            <p>Mark assignment completion for specific date</p>
+            <a href="/admin/assignment/mark" class="action-btn primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Mark Assignment
+            </a>
+        </div>
+        
+        <div class="action-card">
+            <h3>View Reports</h3>
+            <p>View and filter assignment reports</p>
+            <a href="/admin/assignment/reports" class="action-btn secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                View Reports
+            </a>
+        </div>
+        
+                 <div class="action-card">
+             <h3>Current Month Summary</h3>
+             <p>View assignment statistics for current month</p>
+             <div class="summary-stats">
+                 <div class="stat-item">
+                     <span class="stat-number">{{ summary_stats.total_assignments }}</span>
+                     <span class="stat-label">Total Assignments</span>
+                 </div>
+                 <div class="stat-item">
+                     <span class="stat-number">{{ summary_stats.completed_assignments }}</span>
+                     <span class="stat-label">Completed</span>
+                 </div>
+                 <div class="stat-item">
+                     <span class="stat-number">{{ summary_stats.incomplete_assignments }}</span>
+                     <span class="stat-label">Incomplete</span>
+                 </div>
+                 <div class="stat-item">
+                     <span class="stat-number">{{ summary_stats.completion_percentage }}%</span>
+                     <span class="stat-label">Completion %</span>
+                 </div>
+             </div>
+         </div>
+    </div>
+
+    <!-- Assignment Filters -->
+    <div class="assignment-filters">
+        <div class="filter-group">
+            <label for="department-filter">Department:</label>
+            <select id="department-filter" onchange="applyFilters()">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                    <option value="{{ dept.department }}" {% if selected_department == dept.department %}selected{% endif %}>{{ dept.department }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="year-filter">Year:</label>
+            <select id="year-filter" onchange="applyFilters()">
+                <option value="">All Years</option>
+                {% for year in years %}
+                    <option value="{{ year.year }}" {% if selected_year == year.year %}selected{% endif %}>{{ year.year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <button class="filter-btn" onclick="clearFilters()">Clear Filters</button>
+        </div>
+    </div>
+
+    <!-- Assignment Records Table -->
+    <div class="records-section">
+        <div class="records-header">
+            <h3>Assignment Records for {{ current_month }}</h3>
+            <p>Current assignment completion status for all active students</p>
+        </div>
+        
+        {% if students %}
+        <div class="table-container">
+            <table class="assignment-table">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Assignment Completion %</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.student_id }}</td>
+                        <td>{{ student.student_name }}</td>
+                        <td>{{ student.department }}</td>
+                        <td>{{ student.year }}</td>
+                        <td class="completion-cell">
+                            <span class="completion-{{ 'excellent' if student.assignment >= 90 else 'good' if student.assignment >= 80 else 'average' if student.assignment >= 60 else 'poor' }}">
+                                {{ "%.1f"|format(student.assignment) if student.assignment else "0.0" }}%
+                            </span>
+                        </td>
+                        <td class="actions-cell">
+                            <button class="action-btn edit-btn" onclick="editAssignment('{{ student.student_id }}', '{{ student.student_name }}')" title="Edit Assignment">
+                                <i class="fas fa-edit"></i>
+                                <span>Edit</span>
+                            </button>
+                            <button class="action-btn view-btn" onclick="viewAssignmentHistory('{{ student.student_id }}')" title="View History">
+                                <i class="fas fa-history"></i>
+                                <span>View</span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-records">
+            <p>No active students found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Assignment Modal -->
+<div id="assignmentModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Mark Assignment Completion</h3>
+        
+        <form id="assignmentForm" class="assignment-form">
+            <div class="form-group">
+                <label for="assignmentDate">Date:</label>
+                <input type="date" id="assignmentDate" name="date" required value="{{ today }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="assignmentStatus">Status:</label>
+                                 <select id="assignmentStatus" name="status" required>
+                     <option value="completed">Completed</option>
+                     <option value="incomplete">Incomplete</option>
+                 </select>
+            </div>
+            
+            
+            
+            <div class="form-group">
+                <label for="assignmentComments">Comments:</label>
+                <textarea id="assignmentComments" name="comments" rows="3" placeholder="Optional comments..."></textarea>
+            </div>
+            
+            <div class="students-selection">
+                <h4>Select Students:</h4>
+                <div class="selection-controls">
+                    <button type="button" onclick="selectAllStudents()" class="btn-secondary">Select All</button>
+                    <button type="button" onclick="deselectAllStudents()" class="btn-secondary">Deselect All</button>
+                </div>
+                <div class="students-list">
+                    {% for student in students %}
+                    <div class="student-item">
+                        <input type="checkbox" id="student_{{ student.student_id }}" name="students" value="{{ student.student_id }}" class="student-checkbox">
+                        <label for="student_{{ student.student_id }}">
+                            <strong>{{ student.student_name }}</strong> ({{ student.student_id }}) - {{ student.department }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Save Assignment Records</button>
+                <button type="button" onclick="closeAssignmentModal()" class="btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Modal functionality
+const modal = document.getElementById('assignmentModal');
+const span = document.getElementsByClassName('close')[0];
+
+span.onclick = function() {
+    modal.style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function showAssignmentModal() {
+    modal.style.display = 'block';
+}
+
+function closeAssignmentModal() {
+    modal.style.display = 'none';
+}
+
+function selectAllStudents() {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = true);
+}
+
+function deselectAllStudents() {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+}
+
+function editAssignment(studentId, studentName) {
+    // Pre-fill modal with student data
+    document.getElementById('assignmentDate').value = new Date().toISOString().split('T')[0];
+    
+    // Select only this student
+    deselectAllStudents();
+    document.getElementById(`student_${studentId}`).checked = true;
+    
+    showAssignmentModal();
+}
+
+function viewAssignmentHistory(studentId) {
+    // Redirect to reports page with student filter
+    window.location.href = `/admin/assignment/reports?student_id=${studentId}`;
+}
+
+// Filter functions
+function applyFilters() {
+    const department = document.getElementById('department-filter').value;
+    const year = document.getElementById('year-filter').value;
+    
+    // Build query string
+    const params = new URLSearchParams();
+    if (department) params.append('department', department);
+    if (year) params.append('year', year);
+    
+    // Redirect with filters
+    window.location.href = `/admin/assignment?${params.toString()}`;
+}
+
+function clearFilters() {
+    window.location.href = '/admin/assignment';
+}
+
+// Handle form submission
+document.getElementById('assignmentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const selectedStudents = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
+    
+    if (selectedStudents.length === 0) {
+        alert('Please select at least one student.');
+        return;
+    }
+    
+         const assignments = selectedStudents.map(studentId => ({
+         student_id: studentId,
+         status: formData.get('status'),
+         comments: formData.get('comments') || ''
+     }));
+    
+    const data = {
+        assignments: assignments,
+        date: formData.get('date')
+    };
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Saving...';
+    submitBtn.disabled = true;
+    
+    // Send request
+    fetch('/admin/assignment/bulk-mark', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving assignment records. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic Admin Assignment Page */
+.assignment-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.assignment-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.assignment-container h2 {
+    text-align: center;
+    color: #4169E1 !important;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #4169E1, var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+}
+
+.assignment-description {
+    text-align: center;
+    color: var(--text-secondary) !important;
+    margin-bottom: 2.5rem;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.action-card:hover::before {
+    opacity: 1;
+}
+
+.action-card h3 {
+    color: var(--text-primary) !important;
+    margin-bottom: var(--space-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.action-card p {
+    color: var(--text-secondary) !important;
+    margin-bottom: var(--space-lg);
+    font-size: 0.95rem;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+}
+
+.action-btn.primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.action-btn.primary:hover::before {
+    left: 100%;
+}
+
+.action-btn.secondary {
+    background: var(--bg-tertiary);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.action-btn.secondary:hover {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.action-btn.secondary:hover::before {
+    left: 100%;
+}
+
+/* ===== ASSIGNMENT FILTERS ===== */
+.assignment-filters {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-2xl);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: var(--space-lg);
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-md);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: var(--text-primary) !important;
+    font-size: 0.95rem;
+}
+
+.filter-group select {
+    padding: var(--space-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    background: var(--bg-quaternary);
+    color: var(--text-primary) !important;
+    font-size: 0.95rem;
+    min-width: 150px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.filter-btn {
+    padding: var(--space-md) var(--space-xl);
+    background: linear-gradient(135deg, var(--error), #dc3545);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all var(--transition-normal);
+    margin-top: var(--space-xl);
+    box-shadow: var(--shadow-md);
+}
+
+.filter-btn:hover {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-accent);
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+    margin-top: var(--space-lg);
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-normal);
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: var(--space-xs);
+}
+
+.records-section {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.records-header {
+    margin-bottom: var(--space-xl);
+}
+
+.records-header h3 {
+    color: var(--text-primary) !important;
+    margin-bottom: var(--space-sm);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.records-header p {
+    color: var(--text-secondary) !important;
+    font-size: 1rem;
+}
+
+.table-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: var(--radius-sm);
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}
+
+.assignment-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    font-size: 0.95rem;
+}
+
+.assignment-table th,
+.assignment-table td {
+    padding: var(--space-lg) var(--space-md);
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.assignment-table th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    font-weight: 700;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.95rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.assignment-table tbody tr {
+    background: rgba(31, 41, 55, 0.7);
+    transition: all var(--transition-normal);
+}
+
+.assignment-table tbody tr:nth-child(even) {
+    background: rgba(37, 51, 71, 0.6);
+}
+
+.assignment-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+}
+
+.assignment-table tbody td {
+    color: #FFFFFF !important;
+    font-weight: 500;
+}
+
+.assignment-table tbody td * {
+    color: #FFFFFF !important;
+}
+
+.completion-cell {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.completion-excellent {
+    color: #FFFFFF !important;
+    background: rgba(16, 185, 129, 0.2);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    display: inline-block;
+}
+
+.completion-good {
+    color: #FFFFFF !important;
+    background: rgba(20, 201, 151, 0.2);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(20, 201, 151, 0.4);
+    display: inline-block;
+}
+
+.completion-average {
+    color: #FFFFFF !important;
+    background: rgba(255, 193, 7, 0.2);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    display: inline-block;
+}
+
+.completion-poor {
+    color: #FFFFFF !important;
+    background: rgba(220, 53, 69, 0.2);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    display: inline-block;
+}
+
+.status-badge {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.status-incomplete {
+    background: rgba(220, 53, 69, 0.2);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+}
+
+.status-pending {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary) !important;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+}
+
+.month-status-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    align-items: flex-start;
+}
+
+.status-summary {
+    margin-top: var(--space-xs);
+    color: var(--text-secondary) !important;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+.status-summary small {
+    color: var(--text-secondary) !important;
+    opacity: 0.8;
+}
+
+.no-records {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--text-secondary) !important;
+    font-size: 1.1rem;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+}
+
+.action-btn {
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 80px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-decoration: none;
+    position: relative;
+    color: white;
+}
+
+.action-btn i {
+    font-size: 0.9rem;
+    display: inline-block;
+}
+
+.action-btn span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+}
+
+.edit-btn {
+    background: #28a745;
+    color: white;
+    border: 2px solid #28a745;
+}
+
+.edit-btn:hover {
+    background: #218838;
+    border-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+}
+
+.view-btn {
+    background: #17a2b8;
+    color: white;
+    border: 2px solid #17a2b8;
+}
+
+.view-btn:hover {
+    background: #138496;
+    border-color: #138496;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(23,162,184,0.3);
+}
+
+
+
+.no-records {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+}
+
+/* ===== MODAL STYLES ===== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    margin: 3% auto;
+    padding: 0;
+    border-radius: var(--radius-2xl);
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.modal-content h3 {
+    margin: 0;
+    color: var(--text-primary) !important;
+    font-size: 1.5rem;
+    font-weight: 700;
+    padding: var(--space-xl);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+}
+
+.close {
+    color: var(--text-secondary) !important;
+    float: right;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: var(--space-lg);
+    top: var(--space-lg);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+    z-index: 10;
+}
+
+.close:hover,
+.close:focus {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+}
+
+.assignment-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    padding: var(--space-xl);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary) !important;
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: var(--space-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    background: var(--bg-quaternary);
+    color: var(--text-primary) !important;
+    font-size: 1rem;
+    transition: all var(--transition-normal);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.students-selection {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    box-shadow: var(--shadow-md);
+}
+
+.students-selection h4 {
+    margin-bottom: var(--space-lg);
+    color: var(--text-primary) !important;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.selection-controls {
+    margin-bottom: var(--space-lg);
+    display: flex;
+    gap: var(--space-md);
+}
+
+.students-list {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--bg-quaternary);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.students-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.students-list::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.students-list::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: var(--radius-md);
+}
+
+.students-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}
+
+.student-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-normal);
+}
+
+.student-item:hover {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: rgba(0, 212, 255, 0.3);
+    transform: translateX(4px);
+}
+
+.student-checkbox {
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.student-item label {
+    margin: 0;
+    cursor: pointer;
+    flex: 1;
+    color: var(--text-primary) !important;
+    font-size: 0.95rem;
+}
+
+.student-item label strong {
+    color: var(--text-primary) !important;
+    font-weight: 700;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+    margin-top: var(--space-lg);
+    padding-top: var(--space-xl);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 1rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-quaternary);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .assignment-table {
+        font-size: 0.85rem;
+    }
+    
+    .assignment-table th,
+    .assignment-table td {
+        padding: var(--space-md) var(--space-sm);
+    }
+    
+    .actions-cell {
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+    
+    .action-btn {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .assignment-container {
+        padding: var(--space-lg);
+        margin: 2rem auto;
+    }
+    
+    .assignment-container h2 {
+        font-size: 2rem;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+    }
+    
+    .assignment-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        min-width: 100%;
+    }
+    
+    .filter-btn {
+        margin-top: var(--space-md);
+        width: 100%;
+    }
+    
+    .records-section {
+        padding: var(--space-lg);
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .assignment-table {
+        font-size: 0.75rem;
+        min-width: 800px;
+    }
+    
+    .assignment-table th,
+    .assignment-table td {
+        padding: var(--space-sm);
+        white-space: nowrap;
+    }
+    
+    .assignment-table th:nth-child(1),
+    .assignment-table td:nth-child(1) {
+        position: sticky;
+        left: 0;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        z-index: 10;
+    }
+    
+    .assignment-table tbody tr td:nth-child(1) {
+        background: rgba(31, 41, 55, 0.7);
+        z-index: 9;
+    }
+    
+    .assignment-table tbody tr:nth-child(even) td:nth-child(1) {
+        background: rgba(37, 51, 71, 0.6);
+    }
+    
+    .completion-cell {
+        font-size: 0.85rem;
+    }
+    
+    .status-badge {
+        font-size: 0.7rem;
+        padding: var(--space-xs);
+    }
+    
+    .month-status-container {
+        gap: var(--space-xs);
+    }
+    
+    .status-summary {
+        font-size: 0.65rem;
+    }
+    
+    .actions-cell {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+        min-width: 150px;
+    }
+    
+    .action-btn {
+        flex: 1;
+        min-width: 70px;
+        font-size: 0.75rem;
+        padding: var(--space-xs) var(--space-sm);
+    }
+    
+    .action-btn span {
+        display: none;
+    }
+    
+    .action-btn i {
+        font-size: 0.9rem;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 2% auto;
+        max-height: 96vh;
+    }
+    
+    .students-list {
+        max-height: 200px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .assignment-container {
+        padding: var(--space-md);
+        margin: 1rem auto;
+    }
+    
+    .assignment-container h2 {
+        font-size: 1.75rem;
+    }
+    
+    .assignment-description {
+        font-size: 1rem;
+    }
+    
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .assignment-table {
+        font-size: 0.7rem;
+        min-width: 700px;
+    }
+    
+    .assignment-table th,
+    .assignment-table td {
+        padding: var(--space-xs);
+    }
+    
+    .records-header h3 {
+        font-size: 1.2rem;
+    }
+    
+    .records-header p {
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}

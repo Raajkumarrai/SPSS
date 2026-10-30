@@ -1,0 +1,242 @@
+<!-- Unified Navigation Component -->
+<nav class="unified-nav">
+    <div class="nav-container">
+        <!-- Logo/Brand -->
+        <div class="nav-brand">
+            {% if session.get('user_id') %}
+                {% if session.get('role') == 'admin' %}
+                    <a href="/admin/home" class="brand-link">SPPS Admin</a>
+                {% else %}
+                    <a href="/user/home" class="brand-link">SPPS User</a>
+                {% endif %}
+            {% else %}
+                <a href="/" class="brand-link">SPPS</a>
+            {% endif %}
+        </div>
+
+        <!-- Main Navigation -->
+        <div class="nav-menu">
+            {% if session.get('user_id') %}
+                {% if session.get('role') == 'admin' %}
+                    <!-- Admin Navigation -->
+                    <a href="/admin/home" class="nav-item">Dashboard</a>
+                    <a href="/admin/users" class="nav-item">Users</a>
+                    <a href="/admin/students" class="nav-item">Students</a>
+                    <div class="nav-dropdown">
+                        <button class="nav-item dropdown-toggle">More ▼</button>
+                        <div class="dropdown-menu">
+                            <a href="/admin/activities" class="dropdown-item">Activities</a>
+                            <a href="/admin/history" class="dropdown-item">History</a>
+                            <a href="/admin/contact-messages" class="dropdown-item">Contact Messages</a>
+                            <a href="/admin/change-password" class="dropdown-item">Change Password</a>
+                            <a href="/logout" class="dropdown-item">Logout</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- User Navigation -->
+                    <a href="/user/home" class="nav-item">Dashboard</a>
+                    <a href="/predict" class="nav-item">Predict</a>
+                    <a href="/user/students" class="nav-item">Students</a>
+                    <div class="nav-dropdown">
+                        <button class="nav-item dropdown-toggle">More ▼</button>
+                        <div class="dropdown-menu">
+                            <a href="/user/history" class="dropdown-item">History</a>
+                            <a href="/user/mass-predict" class="dropdown-item">Mass Predict</a>
+                            <a href="/user/change-password" class="dropdown-item">Change Password</a>
+                            <a href="/logout" class="dropdown-item">Logout</a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Public Navigation -->
+                <a href="/login" class="nav-item">Login</a>
+                <a href="/signup" class="nav-item">Sign Up</a>
+            {% endif %}
+        </div>
+
+        <!-- Mobile Menu Toggle -->
+        <div class="nav-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+</nav>
+
+<style>
+.unified-nav {
+    background: #4169E1;
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand .brand-link {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.nav-item {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.nav-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-toggle {
+    background: #ff9800 !important;
+    color: white !important;
+}
+
+.dropdown-toggle:hover {
+    background: #f57c00 !important;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: #f9f9f9;
+    min-width: 180px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-radius: 4px;
+    z-index: 1001;
+}
+
+.dropdown-item {
+    color: #333 !important;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s;
+}
+
+.dropdown-item:hover {
+    background: #f1f1f1;
+    color: #4169E1 !important;
+}
+
+.nav-dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.nav-toggle span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    margin: 3px 0;
+    transition: 0.3s;
+}
+
+@media (max-width: 768px) {
+    .nav-container {
+        padding: 0 1rem;
+    }
+    
+    .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #4169E1;
+        flex-direction: column;
+        padding: 1rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .nav-menu.active {
+        display: flex;
+    }
+    
+    .nav-item {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .nav-dropdown {
+        width: 100%;
+    }
+    
+    .dropdown-menu {
+        position: static;
+        width: 100%;
+        box-shadow: none;
+        background: rgba(255,255,255,0.1);
+    }
+    
+    .dropdown-item {
+        color: white !important;
+    }
+    
+    .dropdown-item:hover {
+        background: rgba(255,255,255,0.2);
+        color: white !important;
+    }
+    
+    .nav-toggle {
+        display: flex;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (navToggle && navMenu) {
+        navToggle.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+        });
+    }
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.unified-nav')) {
+            navMenu.classList.remove('active');
+        }
+    });
+});
+</script>

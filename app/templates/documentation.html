@@ -1,0 +1,817 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation - SPPS{% endblock %}
+
+{% block content %}
+<div class="docs-hero">
+    <h1>Documentation</h1>
+    <p class="docs-subtitle">Complete guide to using the Student Performance Prediction System</p>
+</div>
+
+<div class="docs-section">
+    <div class="docs-container">
+        <div class="docs-content">
+            <h2>Getting Started</h2>
+            <p>Welcome to the SPPS Documentation! This comprehensive guide will help you understand and effectively use
+                our Student Performance Prediction System. Whether you're a student, educator, or administrator, you'll
+                find everything you need to get started.</p>
+        </div>
+
+        <div class="docs-nav">
+            <h3>Quick Navigation</h3>
+            <div class="nav-links">
+                <a href="#getting-started" class="nav-link">
+                    <i class="bi bi-play-circle"></i>
+                    Getting Started
+                </a>
+                <a href="#user-guide" class="nav-link">
+                    <i class="bi bi-person"></i>
+                    User Guide
+                </a>
+                <a href="#admin-guide" class="nav-link">
+                    <i class="bi bi-gear"></i>
+                    Admin Guide
+                </a>
+                <a href="#api-reference" class="nav-link">
+                    <i class="bi bi-code-slash"></i>
+                    API Reference
+                </a>
+                <a href="#troubleshooting" class="nav-link">
+                    <i class="bi bi-tools"></i>
+                    Troubleshooting
+                </a>
+            </div>
+        </div>
+
+        <div class="docs-sections">
+            <div class="docs-item" id="getting-started">
+                <div class="docs-icon">
+                    <i class="bi bi-play-circle"></i>
+                </div>
+                <div class="docs-content">
+                    <h3>Getting Started</h3>
+                    <div class="docs-details">
+                        <h4>System Overview</h4>
+                        <p>The Student Performance Prediction System (SPPS) is an AI-powered platform that uses machine
+                            learning algorithms to predict student academic performance based on various factors
+                            including attendance, assignments, study time, and extracurricular activities.</p>
+
+                        <h4>Key Features</h4>
+                        <ul>
+                            <li>Advanced ML-based performance prediction</li>
+                            <li>Real-time dashboard with analytics</li>
+                            <li>Comprehensive student data management</li>
+                            <li>Interactive data visualization</li>
+                            <li>Secure user authentication system</li>
+                        </ul>
+
+                        <h4>System Requirements</h4>
+                        <ul>
+                            <li>Modern web browser (Chrome, Firefox, Safari, Edge)</li>
+                            <li>Stable internet connection</li>
+                            <li>JavaScript enabled</li>
+                            <li>Minimum screen resolution: 1024x768</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="docs-item" id="user-guide">
+                <div class="docs-icon">
+                    <i class="bi bi-person"></i>
+                </div>
+                <div class="docs-content">
+                    <h3>User Guide</h3>
+                    <div class="docs-details">
+                        <h4>Account Setup</h4>
+                        <p>To get started with SPPS, you'll need to create an account. The registration process is
+                            simple and secure.</p>
+                        <ol>
+                            <li>Navigate to the Sign Up page</li>
+                            <li>Fill in your personal information</li>
+                            <li>Create a strong password</li>
+                            <li>Verify your email address</li>
+                            <li>Complete your profile setup</li>
+                        </ol>
+
+                        <h4>Dashboard Navigation</h4>
+                        <p>Once logged in, you'll access the main dashboard where you can:</p>
+                        <ul>
+                            <li>View your performance predictions</li>
+                            <li>Check attendance and assignment status</li>
+                            <li>Access historical data and trends</li>
+                            <li>Update your profile information</li>
+                        </ul>
+
+                        <h4>Making Predictions</h4>
+                        <p>To get a performance prediction:</p>
+                        <ol>
+                            <li>Go to the Prediction page</li>
+                            <li>Enter your current academic data</li>
+                            <li>Submit the form for analysis</li>
+                            <li>Review your prediction results</li>
+                            <li>Access recommendations for improvement</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="docs-item" id="admin-guide">
+                <div class="docs-icon">
+                    <i class="bi bi-gear"></i>
+                </div>
+                <div class="docs-content">
+                    <h3>Administrator Guide</h3>
+                    <div class="docs-details">
+                        <h4>Admin Dashboard</h4>
+                        <p>Administrators have access to comprehensive management tools and analytics.</p>
+                        <ul>
+                            <li>Student data management and bulk operations</li>
+                            <li>System performance monitoring</li>
+                            <li>User account management</li>
+                            <li>Data export and reporting tools</li>
+                        </ul>
+
+                        <h4>Student Management</h4>
+                        <p>Manage student accounts and data:</p>
+                        <ol>
+                            <li>Add new students to the system</li>
+                            <li>Update student information and academic records</li>
+                            <li>Monitor student performance and predictions</li>
+                            <li>Generate reports and analytics</li>
+                        </ol>
+
+                        <h4>System Configuration</h4>
+                        <p>Configure system settings and parameters:</p>
+                        <ul>
+                            <li>Adjust prediction model parameters</li>
+                            <li>Set up data collection schedules</li>
+                            <li>Configure notification settings</li>
+                            <li>Manage user permissions and roles</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="docs-item" id="api-reference">
+                <div class="docs-icon">
+                    <i class="bi bi-code-slash"></i>
+                </div>
+                <div class="docs-content">
+                    <h3>API Reference</h3>
+                    <div class="docs-details">
+                        <h4>Authentication</h4>
+                        <p>All API requests require authentication using JWT tokens.</p>
+                        <div class="code-block">
+                            <code>Authorization: Bearer &lt;your-jwt-token&gt;</code>
+                        </div>
+
+                        <h4>Endpoints</h4>
+                        <div class="api-endpoints">
+                            <div class="endpoint">
+                                <span class="method get">GET</span>
+                                <span class="url">/api/students</span>
+                                <span class="description">Retrieve student list</span>
+                            </div>
+                            <div class="endpoint">
+                                <span class="method post">POST</span>
+                                <span class="url">/api/predict</span>
+                                <span class="description">Generate performance prediction</span>
+                            </div>
+                            <div class="endpoint">
+                                <span class="method get">GET</span>
+                                <span class="url">/api/stats</span>
+                                <span class="description">Get system statistics</span>
+                            </div>
+                        </div>
+
+                        <h4>Response Format</h4>
+                        <p>All API responses follow a consistent JSON format:</p>
+                        <div class="code-block">
+                            <code>{
+  "success": true,
+  "data": {...},
+  "message": "Operation completed successfully"
+}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="docs-item" id="troubleshooting">
+                <div class="docs-icon">
+                    <i class="bi bi-tools"></i>
+                </div>
+                <div class="docs-content">
+                    <h3>Troubleshooting</h3>
+                    <div class="docs-details">
+                        <h4>Common Issues</h4>
+                        <div class="troubleshooting-items">
+                            <div class="trouble-item">
+                                <h5>Login Problems</h5>
+                                <p>If you're having trouble logging in:</p>
+                                <ul>
+                                    <li>Verify your email and password</li>
+                                    <li>Check your internet connection</li>
+                                    <li>Clear your browser cache</li>
+                                    <li>Try a different browser</li>
+                                </ul>
+                            </div>
+
+                            <div class="trouble-item">
+                                <h5>Prediction Errors</h5>
+                                <p>If predictions aren't working:</p>
+                                <ul>
+                                    <li>Ensure all required fields are filled</li>
+                                    <li>Check data format and validity</li>
+                                    <li>Verify your account permissions</li>
+                                    <li>Contact support if issues persist</li>
+                                </ul>
+                            </div>
+
+                            <div class="trouble-item">
+                                <h5>Performance Issues</h5>
+                                <p>If the system is running slowly:</p>
+                                <ul>
+                                    <li>Check your internet connection</li>
+                                    <li>Close unnecessary browser tabs</li>
+                                    <li>Update your browser to the latest version</li>
+                                    <li>Disable browser extensions temporarily</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h4>Support Resources</h4>
+                        <div class="support-links">
+                            <a href="/contact" class="support-link">
+                                <i class="bi bi-envelope"></i>
+                                Contact Support
+                            </a>
+                            <a href="/faq" class="support-link">
+                                <i class="bi bi-question-circle"></i>
+                                FAQ
+                            </a>
+                            <!-- <a href="#" class="support-link">
+                                <i class="bi bi-chat-dots"></i>
+                                Live Chat
+                            </a> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="docs-footer">
+            <h2>Need More Help?</h2>
+            <p>If you can't find what you're looking for, our support team is here to help.</p>
+            <div class="help-actions">
+                <a href="/contact" class="help-btn primary">
+                    <i class="bi bi-envelope"></i>
+                    Contact Support
+                </a>
+                <a href="/faq" class="help-btn secondary">
+                    <i class="bi bi-question-circle"></i>
+                    View FAQ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Futuristic Documentation Page */
+    .docs-hero {
+        text-align: center;
+        padding: 4rem 1rem 3rem 1rem;
+        background: var(--bg-primary);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .docs-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 30% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .docs-hero h1 {
+        color: var(--primary);
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 1;
+    }
+
+    .docs-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.25rem;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .docs-section {
+        max-width: 1200px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .docs-container {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-2xl);
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: var(--space-2xl);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .docs-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        opacity: 0.8;
+    }
+
+    .docs-content h2 {
+        color: var(--primary);
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+    }
+
+    .docs-content p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+    }
+
+    .docs-nav {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        margin: 2rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .docs-nav::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--purple));
+        opacity: 0.8;
+    }
+
+    .docs-nav h3 {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .nav-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-md);
+        background: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all var(--transition-normal);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+        background: rgba(0, 212, 255, 0.05);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: var(--primary);
+    }
+
+    .nav-link i {
+        font-size: 1.1rem;
+        color: var(--primary);
+    }
+
+    .docs-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .docs-item {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .docs-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--secondary), var(--primary));
+        opacity: 0.8;
+    }
+
+    .docs-item:hover {
+        transform: translateY(-4px);
+        box-shadow:
+            0 12px 40px rgba(0, 0, 0, 0.4),
+            0 0 20px rgba(16, 185, 129, 0.2);
+        border-color: var(--secondary);
+    }
+
+    .docs-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.75rem;
+        color: var(--text-inverse);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .docs-item h3 {
+        color: var(--text-primary);
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .docs-details h4 {
+        color: var(--primary);
+        font-size: 1.3rem;
+        margin-bottom: 0.75rem;
+        margin-top: 1.5rem;
+        font-weight: 600;
+    }
+
+    .docs-details h4:first-child {
+        margin-top: 0;
+    }
+
+    .docs-details p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .docs-details ul,
+    .docs-details ol {
+        color: var(--text-secondary);
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .docs-details li {
+        margin-bottom: 0.5rem;
+        position: relative;
+        line-height: 1.6;
+    }
+
+    .docs-details ul li::before {
+        content: '▶';
+        color: var(--primary);
+        font-size: 0.8rem;
+        position: absolute;
+        left: -1.5rem;
+        top: 0.1rem;
+    }
+
+    .docs-details ol {
+        counter-reset: item;
+    }
+
+    .docs-details ol li {
+        counter-increment: item;
+        position: relative;
+    }
+
+    .docs-details ol li::before {
+        content: counter(item) '.';
+        color: var(--primary);
+        font-weight: bold;
+        position: absolute;
+        left: -1.5rem;
+        top: 0;
+    }
+
+    .code-block {
+        background: var(--bg-primary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        margin: 1rem 0;
+        overflow-x: auto;
+    }
+
+    .code-block code {
+        color: var(--primary);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+
+    .api-endpoints {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+
+    .endpoint {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
+        background: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .method {
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        font-weight: bold;
+        min-width: 50px;
+        text-align: center;
+    }
+
+    .method.get {
+        background: var(--success);
+        color: var(--text-inverse);
+    }
+
+    .method.post {
+        background: var(--primary);
+        color: var(--text-inverse);
+    }
+
+    .url {
+        color: var(--text-primary);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        flex: 1;
+    }
+
+    .description {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .troubleshooting-items {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        margin: 1rem 0;
+    }
+
+    .trouble-item {
+        background: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .trouble-item h5 {
+        color: var(--primary);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .trouble-item p {
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .support-links {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .support-link {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-md) var(--space-lg);
+        background: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all var(--transition-normal);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .support-link:hover {
+        background: rgba(0, 212, 255, 0.05);
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .support-link i {
+        color: var(--primary);
+    }
+
+    .docs-footer {
+        margin-top: 3rem;
+        padding: var(--space-xl);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .docs-footer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--purple));
+        opacity: 0.8;
+    }
+
+    .docs-footer h2 {
+        color: var(--primary);
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .docs-footer p {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .help-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .help-btn {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-lg) var(--space-xl);
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition-normal);
+        box-shadow: var(--shadow-md);
+    }
+
+    .help-btn.primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: var(--text-inverse);
+    }
+
+    .help-btn.primary:hover {
+        background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .help-btn.secondary {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .help-btn.secondary:hover {
+        background: rgba(0, 212, 255, 0.05);
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .help-btn i {
+        font-size: 1.1rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .docs-hero h1 {
+            font-size: 2.5rem;
+        }
+
+        .docs-section {
+            margin: 2rem auto;
+            padding: 0 0.5rem;
+        }
+
+        .docs-container {
+            padding: var(--space-xl);
+        }
+
+        .nav-links {
+            grid-template-columns: 1fr;
+        }
+
+        .docs-item {
+            padding: var(--space-lg);
+        }
+
+        .support-links {
+            flex-direction: column;
+        }
+
+        .help-actions {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .docs-hero {
+            padding: 3rem 1rem 2rem 1rem;
+        }
+
+        .docs-hero h1 {
+            font-size: 2rem;
+        }
+
+        .docs-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .docs-container {
+            padding: var(--space-lg);
+        }
+
+        .docs-icon {
+            width: 56px;
+            height: 56px;
+            font-size: 1.5rem;
+        }
+
+        .docs-item h3 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}

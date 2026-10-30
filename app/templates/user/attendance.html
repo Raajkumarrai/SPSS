@@ -1,0 +1,1165 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}Attendance Management - SPPS{% endblock %}
+
+{% block content %}
+<div class="attendance-container">
+    <h2>Attendance Management</h2>
+    <p class="attendance-description">Manage student attendance for {{ today }}</p>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="action-card">
+            <h3>Specific Date's Attendance</h3>
+            <p>Mark attendance for specific date's session</p>
+            <a href="/user/attendance/mark" class="action-btn primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Mark Attendance
+            </a>
+        </div>
+        
+        <div class="action-card">
+            <h3>View Records</h3>
+            <p>View and filter attendance records</p>
+            <a href="/user/attendance/view" class="action-btn secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                View Records
+            </a>
+        </div>
+        
+        <div class="action-card">
+            <h3>Reports</h3>
+            <p>Generate attendance reports</p>
+            <a href="/user/attendance/reports" class="action-btn secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 17V7M13 17V7M17 17V7M5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Generate Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Today's Attendance Summary -->
+    <div class="attendance-summary">
+        <h3>Today's Attendance Summary</h3>
+        <div class="summary-stats">
+            <div class="stat-card present">
+                <div class="stat-number" id="present-count">0</div>
+                <div class="stat-label">Present</div>
+            </div>
+            <div class="stat-card absent">
+                <div class="stat-number" id="absent-count">0</div>
+                <div class="stat-label">Absent</div>
+            </div>
+            <div class="stat-card total">
+                <div class="stat-number" id="total-count">{{ students|length }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student List for Quick Marking -->
+    <div class="student-attendance-list">
+        <h3>Student Attendance List</h3>
+        
+        <!-- Filters -->
+        <form method="GET" action="{{ url_for('user_attendance') }}" class="attendance-filters">
+            <div class="filter-group">
+                <label for="department-filter">Department:</label>
+                <select id="department-filter" name="department" onchange="this.form.submit()">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.department }}" {% if selected_department == dept.department %}selected{% endif %}>{{ dept.department }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="year-filter">Year:</label>
+                <select id="year-filter" name="year" onchange="this.form.submit()">
+                    <option value="">All Years</option>
+                    {% for yr in years %}
+                        <option value="{{ yr.year }}" {% if selected_year == yr.year %}selected{% endif %}>{{ yr.year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <a href="{{ url_for('user_attendance') }}" class="filter-btn">Clear Filters</a>
+            </div>
+        </form>
+        
+        <div class="attendance-controls">
+            <button class="control-btn" onclick="markAllPresent()">Mark All Present</button>
+            <button class="control-btn" onclick="markAllAbsent()">Mark All Absent</button>
+            <button class="control-btn" onclick="clearAllAttendance()">Clear All</button>
+            <button class="control-btn primary" onclick="saveAllAttendance()">Save All</button>
+        </div>
+        
+        <div class="student-list" id="student-list">
+            {% for student in students %}
+            <div class="student-card" data-student-id="{{ student.student_id }}" data-department="{{ student.department }}" data-year="{{ student.year }}">
+                <div class="student-info">
+                    <div class="student-name">{{ student.student_name }}</div>
+                    <div class="student-details">
+                        <span class="student-id">{{ student.student_id }}</span>
+                        <span class="department">{{ student.department }}</span>
+                        <span class="year">{{ student.year }}</span>
+                    </div>
+                </div>
+                <div class="attendance-actions">
+                    <button class="attendance-btn present" onclick="markAttendance('{{ student.student_id }}', 'present')" 
+                            data-status="present">Present</button>
+                    <button class="attendance-btn absent" onclick="markAttendance('{{ student.student_id }}', 'absent')" 
+                            data-status="absent">Absent</button>
+                </div>
+                <div class="attendance-status">
+                    <span class="status-badge" id="status-{{ student.student_id }}">
+                        {% if student.student_id in today_attendance %}
+                            {% set status = today_attendance[student.student_id].status %}
+                            <span class="status-{{ status }}">{{ status|title }}</span>
+                        {% else %}
+                            <span class="status-unmarked">Not Marked</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="filter-summary" id="filter-summary">
+            <p>Showing <span id="visible-count">{{ students|length }}</span> of <span id="total-count">{{ students|length }}</span> students</p>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Modal -->
+<div id="attendanceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Mark Attendance</h3>
+            <span class="close" onclick="closeAttendanceModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="attendanceForm">
+                <div class="form-group">
+                    <label for="attendanceDate">Date:</label>
+                    <input type="date" id="attendanceDate" name="date" value="{{ today }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="attendanceNotes">Notes (Optional):</label>
+                    <textarea id="attendanceNotes" name="notes" rows="3" placeholder="Add any notes..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeAttendanceModal()">Cancel</button>
+            <button type="button" class="btn-primary" onclick="submitAttendance()">Save Attendance</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic Admin Attendance Page */
+.attendance-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.attendance-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.attendance-container h2 {
+    text-align: center;
+    color: #4169E1 !important;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #4169E1, var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+}
+
+.attendance-description {
+    text-align: center;
+    color: var(--text-secondary) !important;
+    margin-bottom: 2.5rem;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.action-card:hover::before {
+    opacity: 1;
+}
+
+.action-card h3 {
+    color: var(--text-primary) !important;
+    margin-bottom: var(--space-sm);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.action-card p {
+    color: var(--text-secondary) !important;
+    margin-bottom: var(--space-lg);
+    font-size: 0.95rem;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+}
+
+.action-btn.primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.action-btn.primary:hover::before {
+    left: 100%;
+}
+
+.action-btn.secondary {
+    background: var(--bg-tertiary);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.action-btn.secondary:hover {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.action-btn.secondary:hover::before {
+    left: 100%;
+}
+
+.attendance-summary {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--space-2xl);
+}
+
+.attendance-summary h3 {
+    color: var(--text-primary) !important;
+    margin-bottom: var(--space-xl);
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-lg);
+}
+
+.stat-card {
+    text-align: center;
+    padding: var(--space-xl);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    background: var(--bg-tertiary);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card.present {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+}
+
+.stat-card.present::before {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.stat-card.absent {
+    border-color: rgba(220, 53, 69, 0.3);
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+}
+
+.stat-card.absent::before {
+    background: linear-gradient(90deg, #dc3545, #c82333);
+}
+
+.stat-card.total {
+    border-color: rgba(65, 105, 225, 0.3);
+    background: linear-gradient(135deg, rgba(65, 105, 225, 0.1), rgba(65, 105, 225, 0.05));
+}
+
+.stat-card.total::before {
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.stat-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.student-attendance-list {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.student-attendance-list h3 {
+    color: var(--text-primary) !important;
+    margin-bottom: var(--space-xl);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.attendance-filters {
+    display: flex;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--bg-tertiary);
+    padding: var(--space-xl);
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: space-between;
+    box-shadow: var(--shadow-md);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: var(--text-primary) !important;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    min-width: 100px;
+}
+
+.filter-group select {
+    padding: var(--space-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    background: var(--bg-quaternary);
+    color: var(--text-primary) !important;
+    font-size: 0.95rem;
+    flex: 1;
+    min-width: 120px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.filter-btn {
+    padding: var(--space-md) var(--space-xl);
+    border: 1px solid var(--error);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--error), #dc3545);
+    color: var(--text-inverse);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 0.95rem;
+    white-space: nowrap;
+    min-width: 120px;
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.filter-btn:hover {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-accent);
+}
+
+.attendance-controls {
+    display: flex;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    padding: var(--space-md) var(--space-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    background: var(--bg-tertiary);
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+}
+
+.control-btn:hover {
+    background: var(--bg-quaternary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.control-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse) !important;
+    border-color: transparent;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+}
+
+.control-btn.primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    color: var(--text-inverse) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.student-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.student-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    background: var(--bg-tertiary);
+    transition: all var(--transition-normal);
+    margin-bottom: var(--space-md);
+}
+
+.student-card:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(0, 212, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+}
+
+.student-card.hidden {
+    display: none;
+}
+
+.filter-summary {
+    text-align: center;
+    margin-top: var(--space-lg);
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.filter-summary p {
+    margin: 0;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.student-info {
+    flex: 1;
+}
+
+.student-name {
+    font-weight: 700;
+    color: var(--text-primary) !important;
+    margin-bottom: var(--space-xs);
+    font-size: 1.1rem;
+}
+
+.student-details {
+    display: flex;
+    gap: var(--space-lg);
+    font-size: 0.9rem;
+    color: var(--text-secondary) !important;
+}
+
+.student-id {
+    font-weight: 600;
+    color: var(--text-primary) !important;
+}
+
+.attendance-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0 1rem;
+}
+
+.attendance-btn {
+    padding: var(--space-sm) var(--space-lg);
+    border: 1px solid;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.attendance-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.attendance-btn.present {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #FFFFFF !important;
+}
+
+.attendance-btn.present:hover {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #FFFFFF !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.attendance-btn.present:hover::before {
+    left: 100%;
+}
+
+.attendance-btn.absent {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.2), rgba(220, 53, 69, 0.1));
+    border-color: rgba(220, 53, 69, 0.4);
+    color: #FFFFFF !important;
+}
+
+.attendance-btn.absent:hover {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: #FFFFFF !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), 0 0 20px rgba(220, 53, 69, 0.3);
+}
+
+.attendance-btn.absent:hover::before {
+    left: 100%;
+}
+
+.attendance-status {
+    min-width: 100px;
+    text-align: center;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-present {
+    background: rgba(16, 185, 129, 0.2);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-absent {
+    background: rgba(220, 53, 69, 0.2);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-unmarked {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary) !important;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+/* ===== MODAL STYLES ===== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: var(--z-modal);
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: var(--radius-2xl);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+    padding: var(--space-xl);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary) !important;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.close {
+    color: var(--text-secondary);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    background: var(--bg-tertiary);
+}
+
+.close:hover {
+    color: var(--text-primary);
+    background: var(--bg-quaternary);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: var(--space-xl);
+}
+
+.modal-footer {
+    padding: var(--space-xl);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+}
+
+.form-group {
+    margin-bottom: var(--space-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-sm);
+    font-weight: 600;
+    color: var(--text-primary) !important;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: var(--space-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    background: var(--bg-tertiary);
+    color: var(--text-primary) !important;
+    transition: all var(--transition-normal);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-quaternary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 768px) {
+    .attendance-container {
+        padding: 0 1rem;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .attendance-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .filter-group label {
+        min-width: auto;
+    }
+    
+    .filter-group select {
+        min-width: auto;
+    }
+    
+    .filter-btn {
+        min-width: auto;
+        align-self: center;
+    }
+    
+    .student-card {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .attendance-actions {
+        margin: 0;
+        justify-content: center;
+    }
+    
+    .attendance-controls {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentAttendanceData = {};
+
+// Debug function
+function debugLog(message) {
+    console.log('Attendance Debug:', message);
+}
+
+// Initialize attendance data from server
+document.addEventListener('DOMContentLoaded', function() {
+    debugLog('Page loaded, initializing attendance system...');
+    
+    // Initialize currentAttendanceData with existing attendance from server
+    {% for student in students %}
+        {% if student.student_id in today_attendance %}
+            {% set status = today_attendance[student.student_id].status %}
+            currentAttendanceData['{{ student.student_id }}'] = '{{ status }}';
+            debugLog('Loaded existing attendance for {{ student.student_name }}: {{ status }}');
+        {% endif %}
+    {% endfor %}
+    
+    updateAttendanceSummary();
+});
+
+function showAttendanceModal() {
+    debugLog('showAttendanceModal called');
+    document.getElementById('attendanceModal').style.display = 'block';
+}
+
+function closeAttendanceModal() {
+    debugLog('closeAttendanceModal called');
+    document.getElementById('attendanceModal').style.display = 'none';
+}
+
+function markAttendance(studentId, status) {
+    debugLog(`markAttendance called: studentId=${studentId}, status=${status}`);
+    currentAttendanceData[studentId] = status;
+    updateStudentStatus(studentId, status);
+    updateAttendanceSummary();
+}
+
+function updateStudentStatus(studentId, status) {
+    debugLog(`updateStudentStatus called: studentId=${studentId}, status=${status}`);
+    const statusElement = document.getElementById(`status-${studentId}`);
+    if (statusElement) {
+        // Clear existing content and add new status with proper styling
+        statusElement.innerHTML = '';
+        const statusSpan = document.createElement('span');
+        statusSpan.className = `status-${status}`;
+        statusSpan.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusElement.appendChild(statusSpan);
+        debugLog(`Status updated for student ${studentId}`);
+    } else {
+        debugLog(`ERROR: Status element not found for student ${studentId}`);
+    }
+}
+
+function updateAttendanceSummary() {
+    debugLog('updateAttendanceSummary called');
+    const counts = {
+        present: 0,
+        absent: 0
+    };
+    
+    Object.values(currentAttendanceData).forEach(status => {
+        if (counts.hasOwnProperty(status)) {
+            counts[status]++;
+        }
+    });
+    
+    const presentElement = document.getElementById('present-count');
+    const absentElement = document.getElementById('absent-count');
+    
+    if (presentElement && absentElement) {
+        presentElement.textContent = counts.present;
+        absentElement.textContent = counts.absent;
+        debugLog(`Summary updated: Present=${counts.present}, Absent=${counts.absent}`);
+    } else {
+        debugLog('ERROR: Summary elements not found');
+    }
+}
+
+function markAllPresent() {
+    debugLog('markAllPresent called');
+    const students = document.querySelectorAll('.student-card:not(.hidden)');
+    debugLog(`Found ${students.length} visible student cards`);
+    students.forEach(student => {
+        const studentId = student.dataset.studentId;
+        debugLog(`Marking student ${studentId} as present`);
+        markAttendance(studentId, 'present');
+    });
+}
+
+function markAllAbsent() {
+    debugLog('markAllAbsent called');
+    const students = document.querySelectorAll('.student-card:not(.hidden)');
+    debugLog(`Found ${students.length} visible student cards`);
+    students.forEach(student => {
+        const studentId = student.dataset.studentId;
+        debugLog(`Marking student ${studentId} as absent`);
+        markAttendance(studentId, 'absent');
+    });
+}
+
+function clearAllAttendance() {
+    debugLog('clearAllAttendance called');
+    currentAttendanceData = {};
+    const students = document.querySelectorAll('.student-card:not(.hidden)');
+    students.forEach(student => {
+        const studentId = student.dataset.studentId;
+        const statusElement = document.getElementById(`status-${studentId}`);
+        if (statusElement) {
+            statusElement.innerHTML = '<span class="status-unmarked">Not Marked</span>';
+        }
+    });
+    updateAttendanceSummary();
+}
+
+function saveAllAttendance() {
+    debugLog('saveAllAttendance called');
+    const attendanceData = Object.keys(currentAttendanceData).map(studentId => ({
+        student_id: studentId,
+        status: currentAttendanceData[studentId],
+        notes: document.getElementById('attendanceNotes') ? document.getElementById('attendanceNotes').value : ''
+    }));
+    
+    debugLog(`Attendance data to save: ${JSON.stringify(attendanceData)}`);
+    
+    if (attendanceData.length === 0) {
+        alert('No attendance data to save. Please mark attendance for at least one student.');
+        return;
+    }
+    
+    const data = {
+        attendance_data: attendanceData,
+        date: document.getElementById('attendanceDate') ? document.getElementById('attendanceDate').value : new Date().toISOString().split('T')[0]
+    };
+    
+    debugLog(`Sending data: ${JSON.stringify(data)}`);
+    
+    fetch('/user/attendance/bulk-mark', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Successfully saved attendance for ${data.success_count} students!`);
+            closeAttendanceModal();
+            location.reload(); // Refresh to show updated data
+        } else {
+            alert('Error saving attendance: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving attendance. Please try again.');
+    });
+}
+
+function submitAttendance() {
+    debugLog('submitAttendance called');
+    saveAllAttendance();
+}
+
+// Filter functions
+function filterStudents() {
+    debugLog('filterStudents called');
+    const departmentFilter = document.getElementById('department-filter').value;
+    const yearFilter = document.getElementById('year-filter').value;
+    
+    debugLog(`Filtering by department: ${departmentFilter}, year: ${yearFilter}`);
+    
+    const studentCards = document.querySelectorAll('.student-card');
+    let visibleCount = 0;
+    
+    studentCards.forEach(card => {
+        const department = card.dataset.department;
+        const year = card.dataset.year;
+        
+        const departmentMatch = !departmentFilter || department === departmentFilter;
+        const yearMatch = !yearFilter || year === yearFilter;
+        
+        if (departmentMatch && yearMatch) {
+            card.classList.remove('hidden');
+            visibleCount++;
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+    
+    // Update summary
+    document.getElementById('visible-count').textContent = visibleCount;
+    document.getElementById('total-count').textContent = studentCards.length;
+    
+    debugLog(`Filtered to show ${visibleCount} of ${studentCards.length} students`);
+}
+
+function clearFilters() {
+    debugLog('clearFilters called');
+    document.getElementById('department-filter').value = '';
+    document.getElementById('year-filter').value = '';
+    filterStudents();
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('attendanceModal');
+    if (event.target === modal) {
+        closeAttendanceModal();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}Assignment Reports - SPPS{% endblock %}
+
+{% block content %}
+<div class="assignment-reports-container">
+    <div class="assignment-header">
+        <h2>Assignment Reports</h2>
+        <p class="assignment-subtitle">Generate and view assignment reports and statistics</p>
+    </div>
+
+    <!-- Export Section -->
+    <div class="export-section">
+        <a href="/user/assignment/export" class="btn-export">Export to Excel</a>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="summary-section">
+        <h3>Summary Statistics</h3>
+        <div class="summary-stats">
+            <div class="stat-card total">
+                <div class="stat-number">{{ summary.total_students }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-card present">
+                <div class="stat-number">{{ summary.completed_assignments }}</div>
+                <div class="stat-label">Completed Assignments</div>
+            </div>
+                         <div class="stat-card absent">
+                 <div class="stat-number">{{ summary.incomplete_assignments }}</div>
+                 <div class="stat-label">Incomplete Assignments</div>
+             </div>
+             <div class="stat-card average">
+                 <div class="stat-number">{{ summary.completion_percentage }}%</div>
+                 <div class="stat-label">Completion %</div>
+             </div>
+        </div>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="reports-section">
+        <div class="reports-header">
+            <h3>Student Assignment Reports ({{ reports|length }} students)</h3>
+        </div>
+        
+        {% if reports %}
+        <div class="table-container">
+            <table class="reports-table">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Total Assignments</th>
+                        <th>Completed</th>
+                        <th>Incomplete</th>
+                        <th>Completion %</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>{{ report.student_id }}</td>
+                        <td>{{ report.student_name }}</td>
+                        <td>{{ report.department }}</td>
+                        <td>{{ report.year }}</td>
+                        <td class="total-cell">{{ report.total_assignments }}</td>
+                        <td class="completed-cell">{{ report.completed_assignments }}</td>
+                        <td class="incomplete-cell">{{ report.incomplete_assignments }}</td>
+                        <td class="completion-cell">
+                            <span class="completion-{{ 'excellent' if report.completion_percentage >= 90 else 'good' if report.completion_percentage >= 80 else 'average' if report.completion_percentage >= 60 else 'poor' }}">
+                                {{ "%.1f"|format(report.completion_percentage) if report.completion_percentage else "0.0" }}%
+                            </span>
+                        </td>
+                        <td>{{ report.updated_at.strftime('%Y-%m-%d %H:%M') if report.updated_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-reports">
+            <p>No assignment reports found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic User Assignment Reports Page */
+.assignment-reports-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.assignment-reports-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.assignment-header {
+    text-align: center;
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    z-index: 1;
+}
+
+.assignment-header h2 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.assignment-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.export-section {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    z-index: 1;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-export {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left var(--transition-normal);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-secondary {
+    background: rgba(31, 41, 55, 0.8);
+    color: var(--text-primary);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(31, 41, 55, 1);
+    border-color: var(--text-secondary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-export {
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+    color: var(--text-inverse);
+}
+
+.btn-export:hover {
+    background: linear-gradient(135deg, var(--secondary-light), var(--secondary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-secondary);
+}
+
+.summary-section {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    z-index: 1;
+}
+
+.summary-section h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-xl);
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-lg);
+}
+
+.stat-card {
+    text-align: center;
+    padding: var(--space-xl);
+    border-radius: var(--radius-lg);
+    border: 2px solid;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card.total {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 212, 255, 0.05));
+}
+
+.stat-card.present {
+    border-color: var(--secondary);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+}
+
+.stat-card.absent {
+    border-color: var(--error);
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.15), rgba(220, 53, 69, 0.05));
+}
+
+.stat-card.average {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
+}
+
+.reports-section {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.reports-header {
+    margin-bottom: var(--space-xl);
+}
+
+.reports-header h3 {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.reports-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    font-size: 0.95rem;
+}
+
+.reports-table th,
+.reports-table td {
+    padding: var(--space-lg) var(--space-md);
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.reports-table th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    font-weight: 700;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.95rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.reports-table tbody tr {
+    background: rgba(31, 41, 55, 0.7);
+    transition: all var(--transition-normal);
+}
+
+.reports-table tbody tr:nth-child(even) {
+    background: rgba(37, 51, 71, 0.6);
+}
+
+.reports-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+}
+
+.reports-table tbody td {
+    color: #FFFFFF !important;
+    font-weight: 500;
+}
+
+.status-badge {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.status-incomplete {
+    background: rgba(220, 53, 69, 0.2);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+}
+
+/* Assignment Report Table Styles */
+.total-cell {
+    font-weight: 700;
+    text-align: center;
+    color: var(--primary) !important;
+}
+
+.completed-cell {
+    font-weight: 700;
+    text-align: center;
+    color: var(--secondary) !important;
+}
+
+.incomplete-cell {
+    font-weight: 700;
+    text-align: center;
+    color: var(--error) !important;
+}
+
+.completion-cell {
+    font-weight: 700;
+    text-align: center;
+}
+
+.completion-excellent {
+    color: #FFFFFF !important;
+    background: rgba(16, 185, 129, 0.2);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    display: inline-block;
+}
+
+.completion-good {
+    color: #FFFFFF !important;
+    background: rgba(20, 201, 151, 0.2);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(20, 201, 151, 0.4);
+    display: inline-block;
+}
+
+.completion-average {
+    color: #FFFFFF !important;
+    background: rgba(255, 193, 7, 0.2);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    display: inline-block;
+}
+
+.completion-poor {
+    color: #FFFFFF !important;
+    background: rgba(220, 53, 69, 0.2);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    display: inline-block;
+}
+
+.no-reports {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--text-secondary);
+}
+
+.no-reports p {
+    margin-bottom: var(--space-lg);
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .assignment-reports-container {
+        padding: var(--space-lg);
+    }
+    
+    .assignment-header h2 {
+        font-size: 2rem;
+    }
+    
+    .export-section {
+        justify-content: center;
+    }
+    
+    .export-section .btn-export {
+        width: 100%;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .reports-table {
+        font-size: 0.8rem;
+    }
+    
+    .reports-table th,
+    .reports-table td {
+        padding: var(--space-sm);
+    }
+}
+</style>
+{% endblock %}

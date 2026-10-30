@@ -1,0 +1,1703 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}My Students - SPPS{% endblock %}
+
+{% block content %}
+<div class="students-container">
+    <h2>My Students</h2>
+    <p class="students-description">Manage and view all your students' information and performance metrics.</p>
+    
+    <!-- Summary Stats -->
+    <div class="summary-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_students }}</div>
+            <div class="stat-label">Total Students</div>
+        </div>
+    </div>
+    
+         <!-- Advanced Search and Filters -->
+     <div class="advanced-filters-container">
+         <form class="advanced-filters-form" method="get" action="">
+             <div class="filter-row">
+                 <div class="filter-group search-group">
+                     <input type="text" name="search" value="{{ search }}" placeholder="Search by name, ID, department, or year..." class="search-input">
+                 </div>
+                 <div class="filter-group">
+                     <select name="department" class="filter-select">
+                         <option value="">All Departments</option>
+                         {% for dept in departments %}
+                         <option value="{{ dept.department }}" {% if department_filter == dept.department %}selected{% endif %}>{{ dept.department }}</option>
+                         {% endfor %}
+                     </select>
+                 </div>
+                 <div class="filter-group">
+                     <select name="year" class="filter-select">
+                         <option value="">All Years</option>
+                         {% for yr in years %}
+                         <option value="{{ yr.year }}" {% if year_filter == yr.year %}selected{% endif %}>{{ yr.year }}</option>
+                         {% endfor %}
+                     </select>
+                 </div>
+                 <div class="filter-group">
+                     <select name="status" class="filter-select">
+                         <option value="">All Status</option>
+                         <option value="Active" {% if status_filter == 'Active' %}selected{% endif %}>Active</option>
+                         <option value="Inactive" {% if status_filter == 'Inactive' %}selected{% endif %}>Inactive</option>
+                     </select>
+                 </div>
+             </div>
+             <div class="filter-row">
+                 <div class="filter-group">
+                     <select name="sort_by" class="filter-select">
+                         <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Sort by Date Added</option>
+                         <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Sort by Name</option>
+                         <option value="student_id" {% if sort_by == 'student_id' %}selected{% endif %}>Sort by Student ID</option>
+                         <option value="department" {% if sort_by == 'department' %}selected{% endif %}>Sort by Department</option>
+                         <option value="year" {% if sort_by == 'year' %}selected{% endif %}>Sort by Year</option>
+                         <option value="attendance" {% if sort_by == 'attendance' %}selected{% endif %}>Sort by Attendance</option>
+                         <option value="previous_score" {% if sort_by == 'previous_score' %}selected{% endif %}>Sort by Previous Score</option>
+                     </select>
+                 </div>
+                 <div class="filter-group">
+                     <select name="sort_order" class="filter-select">
+                         <option value="DESC" {% if sort_order == 'DESC' %}selected{% endif %}>Descending</option>
+                         <option value="ASC" {% if sort_order == 'ASC' %}selected{% endif %}>Ascending</option>
+                     </select>
+                 </div>
+                 <div class="filter-group action-group">
+                     <button type="submit" class="filter-btn">Apply Filters</button>
+                     <a href="/user/students" class="clear-btn">Clear All</a>
+                 </div>
+             </div>
+         </form>
+     </div>
+    
+    <div class="action-buttons-container">
+        <button class="action-btn-primary download-btn" onclick="downloadStudentsExcel()" title="Download all students as Excel">
+            <i class="fas fa-download"></i> Download Excel
+        </button>
+        <button class="action-btn-primary add-btn" onclick="window.location.href='/user/add-student'">
+            <i class="fas fa-plus"></i> Add Student
+        </button>
+    </div>
+    
+    <div class="students-table-container">
+        <table class="user-students-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-sort="student_id">Student ID</th>
+                    <th class="sortable" data-sort="name">Student Name</th>
+                    <th class="sortable" data-sort="attendance">Attendance</th>
+                    <th class="sortable" data-sort="assignment">Assignment</th>
+                    <th class="sortable" data-sort="study_time">Study Time</th>
+                    <th class="sortable" data-sort="previous_score">Previous Score</th>
+                    <th class="sortable" data-sort="extracurricular">Extracurricular</th>
+                    <th class="sortable" data-sort="department">Department</th>
+                    <th class="sortable" data-sort="year">Year</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+                         <tbody>
+                 {% if students %}
+                    {% for student in students %}
+                    <tr class="student-row" data-student-id="{{ student.id }}">
+                        <td>{{ student.student_id if student.student_id else student.id }}</td>
+                        <td>{{ student.name }}</td>
+                        <td class="score-cell {% if student.attendance and student.attendance >= 80 %}high-score{% elif student.attendance and student.attendance >= 60 %}medium-score{% else %}low-score{% endif %}">
+                            {{ "%.1f"|format(student.attendance) if student.attendance else '0.0' }}%
+                        </td>
+                        <td class="score-cell {% if student.assignment and student.assignment >= 80 %}high-score{% elif student.assignment and student.assignment >= 60 %}medium-score{% else %}low-score{% endif %}">
+                            {{ "%.1f"|format(student.assignment) if student.assignment else '0.0' }}%
+                        </td>
+                        <td>{{ "%.1f"|format(student.study_time) if student.study_time else '0.0' }} hrs</td>
+                        <td class="score-cell {% if student.previous_score and student.previous_score >= 80 %}high-score{% elif student.previous_score and student.previous_score >= 60 %}medium-score{% else %}low-score{% endif %}">
+                            {{ "%.1f"|format(student.previous_score) if student.previous_score else '0.0' }}%
+                        </td>
+                        <td class="score-cell {% if student.extracurricular and student.extracurricular >= 80 %}high-score{% elif student.extracurricular and student.extracurricular >= 60 %}medium-score{% else %}low-score{% endif %}">
+                            {{ "%.1f"|format(student.extracurricular) if student.extracurricular else '0.0' }}%
+                        </td>
+                        <td>{{ student.department }}</td>
+                        <td>{{ student.year }}</td>
+                        <td class="actions-cell">
+                            <button class="action-btn edit-btn" onclick="editStudent({{ student.id }})" title="Edit Student">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn predict-btn" onclick="predictStudentPerformance({{ student.id }}, {{ student.name|tojson }})" title="Predict Performance">
+                                <i class="fas fa-chart-line"></i> Predict
+                            </button>
+                            <button class="action-btn view-btn" onclick="viewStudentDetails({{ student.id }})" title="View Details">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteStudent({{ student.id }}, {{ student.name|tojson }})" title="Delete Student">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="no-data">
+                                <i class="fas fa-users"></i>
+                                <p>No students found.</p>
+                                {% if search or department_filter or year_filter or status_filter %}
+                                <p>Try adjusting your filters or search terms.</p>
+                                {% else %}
+                                <p>Add your first student to get started!</p>
+                                <p><a href="/debug/add-test-student" class="no-data-link">Click here to add a test student</a></p>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div id="studentModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="studentDetails"></div>
+    </div>
+</div>
+
+<!-- Prediction Results Modal -->
+<div id="predictionModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="predictionResults">
+            <h3 class="prediction-modal-title">
+                <i class="fas fa-chart-line"></i> Performance Prediction Results
+            </h3>
+            <div id="predictionContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sorting functionality
+document.querySelectorAll('.sortable').forEach(header => {
+    header.addEventListener('click', function() {
+        const sortBy = this.dataset.sort;
+        const currentSortOrder = '{{ sort_order }}';
+        const newSortOrder = currentSortOrder === 'ASC' ? 'DESC' : 'ASC';
+        
+        const url = new URL(window.location);
+        url.searchParams.set('sort_by', sortBy);
+        url.searchParams.set('sort_order', newSortOrder);
+        window.location.href = url.toString();
+    });
+});
+
+// Add visual feedback for sortable headers
+document.querySelectorAll('.sortable').forEach(header => {
+    header.style.cursor = 'pointer';
+    header.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#27408b';
+    });
+    header.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#4169E1';
+    });
+});
+
+function editStudent(studentId) {
+    if (confirm('Are you sure you want to edit this student?')) {
+        window.location.href = `/user/edit-student/${studentId}`;
+    }
+}
+
+function predictStudentPerformance(studentId, studentName) {
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Predicting...';
+    button.disabled = true;
+    
+    fetch(`/api/predict/${studentId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Reset button
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        if (data.success) {
+            showPredictionResults(data);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        // Reset button
+        button.innerHTML = originalText;
+        button.disabled = false;
+        console.error('Error:', error);
+        alert('Error making prediction. Please try again.');
+    });
+}
+
+function showPredictionResults(data) {
+    const prediction = data.prediction;
+    const studentName = data.student_name;
+    const studentId = data.student_id;
+    
+    let content = `
+        <div class="prediction-header">
+            <h4 style="color: #4169E1; margin-bottom: 0.5rem;">${studentName} (${studentId})</h4>
+            <p style="color: #666; margin-bottom: 1.5rem;">ML Model Prediction Results</p>
+        </div>
+        
+        <div class="prediction-summary">
+            <div class="prediction-score ${prediction.result.toLowerCase()}">
+                <div class="score-number">${prediction.best_prediction.toFixed(1)}%</div>
+                <div class="score-label">Predicted Score</div>
+                <div class="result-badge ${prediction.result.toLowerCase()}">${prediction.result}</div>
+            </div>
+        </div>
+        
+        <div class="model-predictions">
+            <h5 style="color: #4169E1; margin-bottom: 1rem;">All Model Predictions:</h5>
+            <div class="model-grid">
+    `;
+    
+    // Add predictions from all models
+    for (const [modelName, score] of Object.entries(prediction.predictions)) {
+        if (typeof score === 'number') {
+            content += `
+                <div class="model-prediction">
+                    <div class="model-name">${modelName}</div>
+                    <div class="model-score">${score.toFixed(1)}%</div>
+                </div>
+            `;
+        }
+    }
+    
+    content += `
+            </div>
+        </div>
+        
+        <div class="recommendation-section">
+            <h5 style="color: #4169E1; margin-bottom: 1rem;">Recommendation:</h5>
+            <div class="recommendation-box">
+                <i class="fas fa-lightbulb"></i>
+                <p>${prediction.recommendation}</p>
+            </div>
+        </div>
+        
+        <div class="prediction-footer">
+            <p style="font-size: 0.9rem; color: #666; text-align: center;">
+                <i class="fas fa-info-circle"></i>
+                Best Model: ${prediction.best_model} | 
+                Passing Threshold: 40% | 
+                Max Score: 97% | 
+                Generated: ${new Date().toLocaleString()}
+            </p>
+        </div>
+    `;
+    
+    document.getElementById('predictionContent').innerHTML = content;
+    document.getElementById('predictionModal').style.display = 'block';
+}
+
+function deleteStudent(studentId, studentName) {
+    if (confirm(`Are you sure you want to delete ${studentName}? This action cannot be undone.`)) {
+        fetch(`/user/delete-student/${studentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the row from the table
+                const row = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (row) {
+                    row.remove();
+                    // Update the total count
+                    const statNumber = document.querySelector('.stat-number');
+                    if (statNumber) {
+                        const currentCount = parseInt(statNumber.textContent);
+                        statNumber.textContent = currentCount - 1;
+                    }
+                }
+                // Show success message
+                showNotification('Student deleted successfully!', 'success');
+            } else {
+                showNotification(data.message || 'Error deleting student', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error deleting student. Please try again.', 'error');
+        });
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    // Create notification content with icon
+    const icon = type === 'success' ? 'fa-check-circle' : 
+                 type === 'error' ? 'fa-exclamation-circle' : 
+                 type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-icon">
+                <i class="fas ${icon}"></i>
+            </div>
+            <div class="notification-text-container">
+                <span class="notification-text">${message}</span>
+            </div>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 4000);
+}
+
+function viewStudentDetails(studentId) {
+    const modal = document.getElementById('studentModal');
+    const detailsDiv = document.getElementById('studentDetails');
+    
+    // Show loading state
+    detailsDiv.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #4169E1;"></i><p>Loading student details...</p></div>';
+    modal.style.display = 'block';
+    
+    // Fetch student details via AJAX
+    fetch(`/api/student/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const student = data.student;
+                detailsDiv.innerHTML = `
+                    <h3>Student Details</h3>
+                    <div class="student-details-grid">
+                        <div class="detail-item">
+                            <strong>Student ID:</strong> ${student.student_id || student.id}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Name:</strong> ${student.name}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Email:</strong> ${student.email || 'Not provided'}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Department:</strong> ${student.department}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Year:</strong> ${student.year}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Status:</strong> <span class="status-badge ${student.status.toLowerCase()}">${student.status}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Attendance:</strong> ${student.attendance.toFixed(1)}%
+                        </div>
+                        <div class="detail-item">
+                            <strong>Assignment:</strong> ${student.assignment.toFixed(1)}%
+                        </div>
+                        <div class="detail-item">
+                            <strong>Study Time:</strong> ${student.study_time.toFixed(1)} hrs
+                        </div>
+                        <div class="detail-item">
+                            <strong>Previous Score:</strong> ${student.previous_score.toFixed(1)}%
+                        </div>
+                        <div class="detail-item">
+                            <strong>Extracurricular:</strong> ${student.extracurricular.toFixed(1)}%
+                        </div>
+                        <div class="detail-item">
+                            <strong>Added:</strong> ${student.created_at ? new Date(student.created_at).toLocaleDateString() : 'Unknown'}
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="action-btn edit-btn" onclick="editStudent(${student.id})">
+                            <i class="fas fa-edit"></i> Edit Student
+                        </button>
+                        <button class="action-btn predict-btn" onclick="predictStudentPerformance(${student.id}, ${JSON.stringify(student.name)})">
+                            <i class="fas fa-chart-line"></i> Predict Performance
+                        </button>
+                    </div>
+                `;
+            } else {
+                detailsDiv.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #dc3545;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>${data.message || 'Error loading student details'}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            detailsDiv.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: #dc3545;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Error loading student details. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+// Modal functionality
+const studentModal = document.getElementById('studentModal');
+const predictionModal = document.getElementById('predictionModal');
+const closeButtons = document.getElementsByClassName('close');
+
+// Close buttons functionality
+Array.from(closeButtons).forEach(button => {
+    button.onclick = function() {
+        studentModal.style.display = 'none';
+        predictionModal.style.display = 'none';
+    }
+});
+
+// Click outside modal to close
+window.onclick = function(event) {
+    if (event.target == studentModal) {
+        studentModal.style.display = 'none';
+    }
+    if (event.target == predictionModal) {
+        predictionModal.style.display = 'none';
+    }
+}
+
+// Auto-submit form when filters change
+document.querySelectorAll('.filter-select').forEach(select => {
+    select.addEventListener('change', function() {
+        this.closest('form').submit();
+    });
+});
+
+ // Add loading state for better UX
+ document.querySelector('.advanced-filters-form').addEventListener('submit', function() {
+     const submitBtn = this.querySelector('.filter-btn');
+     submitBtn.textContent = 'Loading...';
+     submitBtn.disabled = true;
+ });
+ 
+ // Download Excel functionality
+ function downloadStudentsExcel() {
+     const downloadBtn = document.querySelector('.download-btn');
+     const originalText = downloadBtn.innerHTML;
+     
+     // Show loading state
+     downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+     downloadBtn.disabled = true;
+     
+     // Get current filter parameters
+     const urlParams = new URLSearchParams(window.location.search);
+     const search = urlParams.get('search') || '';
+     const department = urlParams.get('department') || '';
+     const year = urlParams.get('year') || '';
+     const status = urlParams.get('status') || '';
+     const sort_by = urlParams.get('sort_by') || 'created_at';
+     const sort_order = urlParams.get('sort_order') || 'DESC';
+     
+     // Create download URL with current filters
+     const downloadUrl = `/user/download-students-excel?search=${encodeURIComponent(search)}&department=${encodeURIComponent(department)}&year=${encodeURIComponent(year)}&status=${encodeURIComponent(status)}&sort_by=${encodeURIComponent(sort_by)}&sort_order=${encodeURIComponent(sort_order)}`;
+     
+     // Create temporary link and trigger download
+     const link = document.createElement('a');
+     link.href = downloadUrl;
+     link.download = `students_${new Date().toISOString().split('T')[0]}.xlsx`;
+     document.body.appendChild(link);
+     link.click();
+     document.body.removeChild(link);
+     
+     // Reset button after a short delay
+     setTimeout(() => {
+         downloadBtn.innerHTML = originalText;
+         downloadBtn.disabled = false;
+         showNotification('Excel file downloaded successfully!', 'success');
+     }, 2000);
+ }
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic Students Page */
+.students-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.students-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.students-container h2 {
+    text-align: center;
+    color: #4169E1 !important;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #4169E1, var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+}
+
+.students-description {
+    text-align: center;
+    color: var(--text-secondary) !important;
+    margin-bottom: 2.5rem;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== SUMMARY STATS ===== */
+.summary-stats {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    padding: var(--space-xl) var(--space-2xl);
+    border-radius: var(--radius-xl);
+    text-align: center;
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-2xl), var(--glow-primary);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: var(--text-inverse) !important;
+}
+
+.stat-label {
+    font-size: 1rem;
+    opacity: 0.9;
+    font-weight: 600;
+    color: var(--text-inverse) !important;
+}
+
+/* ===== ADVANCED FILTERS ===== */
+.advanced-filters-container {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.advanced-filters-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.filter-row {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--space-md);
+}
+
+.filter-row:last-child {
+    margin-bottom: 0;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-group {
+    flex: 2;
+    min-width: 300px;
+}
+
+.action-group {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+    justify-content: flex-end;
+    min-width: auto;
+}
+
+.search-input {
+    width: 100%;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+    font-family: inherit;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.filter-select {
+    width: 100%;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-family: inherit;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.filter-select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.filter-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    min-width: 120px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.filter-btn:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.filter-btn:hover::before {
+    left: 100%;
+}
+
+.clear-btn {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    padding: var(--space-md) var(--space-xl);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-normal);
+    min-width: 100px;
+    height: 48px;
+}
+
+.clear-btn:hover {
+    background: var(--bg-primary);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ===== ACTION BUTTONS ===== */
+.action-buttons-container {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+    margin-bottom: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    min-width: 160px;
+}
+
+.action-btn-primary.add-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+}
+
+.action-btn-primary.download-btn {
+    background: linear-gradient(135deg, var(--success), var(--secondary));
+    color: var(--text-inverse);
+}
+
+.action-btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.action-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.action-btn-primary.add-btn:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+}
+
+.action-btn-primary.download-btn:hover {
+    background: linear-gradient(135deg, var(--secondary), var(--success));
+}
+
+.action-btn-primary:hover::before {
+    left: 100%;
+}
+
+.action-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===== TABLE STYLES ===== */
+.students-table-container {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: auto;
+    background: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-xl);
+    box-shadow: 
+        var(--shadow-lg),
+        0 0 30px rgba(0, 212, 255, 0.1);
+    padding: var(--space-xl);
+    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+}
+
+.students-table-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0.5;
+}
+
+/* Custom scrollbar for table container */
+.students-table-container::-webkit-scrollbar {
+    height: 12px;
+}
+
+.students-table-container::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+}
+
+.students-table-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--bg-tertiary);
+}
+
+.students-table-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, var(--primary-light), var(--secondary-light));
+}
+
+.user-students-table {
+    min-width: 1400px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: var(--space-md);
+}
+
+.user-students-table th,
+.user-students-table td {
+    padding: var(--space-lg) var(--space-md);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.user-students-table th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all var(--transition-normal);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.user-students-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.user-students-table th.sortable:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.user-students-table tbody tr {
+    background: rgba(31, 41, 55, 0.7);
+    transition: all var(--transition-normal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-students-table tbody tr:nth-child(even) {
+    background: rgba(37, 51, 71, 0.6);
+}
+
+.user-students-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.user-students-table tbody td {
+    color: #FFFFFF !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-students-table tbody td:first-child {
+    font-weight: 600;
+    color: #FFFFFF !important;
+}
+
+.user-students-table tbody td:nth-child(2) {
+    font-weight: 600;
+    color: #FFFFFF !important;
+    text-align: left;
+    padding-left: var(--space-lg);
+}
+
+.user-students-table tbody td:nth-child(8),
+.user-students-table tbody td:nth-child(9) {
+    color: #FFFFFF !important;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.user-students-table tbody td:nth-child(5) {
+    color: #FFFFFF !important;
+    font-weight: 600;
+}
+
+.user-students-table tbody td * {
+    color: #FFFFFF !important;
+}
+
+/* ===== SCORE CELLS ===== */
+.score-cell {
+    font-weight: 700;
+    font-size: 1rem;
+    padding: var(--space-sm) var(--space-md) !important;
+    border-radius: var(--radius-md);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    border: 1px solid transparent;
+    transition: all var(--transition-normal);
+    color: #FFFFFF !important;
+}
+
+.score-cell.high-score {
+    color: #FFFFFF !important;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15));
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.score-cell.high-score:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(16, 185, 129, 0.25));
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+    transform: scale(1.05);
+}
+
+.score-cell.medium-score {
+    color: #FFFFFF !important;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(251, 191, 36, 0.15));
+    border-color: rgba(251, 191, 36, 0.4);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.score-cell.medium-score:hover {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.35), rgba(251, 191, 36, 0.25));
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+    transform: scale(1.05);
+}
+
+.score-cell.low-score {
+    color: #FFFFFF !important;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.15));
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+}
+
+.score-cell.low-score:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.35), rgba(239, 68, 68, 0.25));
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+    transform: scale(1.05);
+}
+
+
+.actions-cell {
+    display: flex;
+    gap: var(--space-xs);
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-direction: row;
+    padding: var(--space-sm);
+}
+
+.action-btn {
+    padding: var(--space-xs) var(--space-sm);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    min-width: 60px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1.2;
+    height: 32px;
+    font-family: inherit;
+    box-sizing: border-box;
+    vertical-align: middle;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.edit-btn {
+    background: linear-gradient(135deg, var(--success), var(--secondary));
+    color: var(--text-inverse);
+}
+
+.edit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--glow-secondary);
+}
+
+.edit-btn:hover::before {
+    left: 100%;
+}
+
+.predict-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+}
+
+.predict-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--glow-primary);
+}
+
+.predict-btn:hover::before {
+    left: 100%;
+}
+
+.view-btn {
+    background: linear-gradient(135deg, var(--info), var(--primary));
+    color: var(--text-inverse);
+}
+
+.view-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--glow-primary);
+}
+
+.view-btn:hover::before {
+    left: 100%;
+}
+
+.delete-btn {
+    background: linear-gradient(135deg, var(--error), #dc3545);
+    color: var(--text-inverse);
+}
+
+.delete-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--glow-accent);
+}
+
+.delete-btn:hover::before {
+    left: 100%;
+}
+
+/* ===== NOTIFICATION STYLES ===== */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    border-radius: var(--radius-xl);
+    color: var(--text-inverse);
+    font-weight: 600;
+    z-index: var(--z-toast);
+    animation: slideIn 0.3s ease-out;
+    max-width: 400px;
+    box-shadow: var(--shadow-2xl);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notification-content {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem 1.5rem;
+    gap: 0.75rem;
+}
+
+.notification-icon {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    margin-top: 0.125rem;
+    opacity: 0.9;
+}
+
+.notification-text-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-text {
+    display: block;
+    width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.notification-close {
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    font-size: 0.875rem;
+    cursor: pointer;
+    opacity: 0.9;
+    transition: all 0.2s ease;
+    padding: 0.5rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-top: -0.25rem;
+    font-weight: bold;
+}
+
+.notification-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.notification-close:active {
+    transform: scale(0.95);
+}
+
+.notification.success {
+    background: linear-gradient(135deg, var(--success), var(--secondary));
+}
+
+.notification.error {
+    background: linear-gradient(135deg, var(--error), #e74c3c);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ===== MODAL STYLES ===== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: var(--z-modal);
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    margin: 2% auto;
+    padding: var(--space-xl);
+    border-radius: var(--radius-2xl);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+.close {
+    color: var(--text-secondary);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: var(--space-lg);
+    top: var(--space-lg);
+    transition: all var(--transition-normal);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    background: var(--bg-tertiary);
+}
+
+.close:hover {
+    color: var(--text-primary);
+    background: var(--bg-quaternary);
+    transform: rotate(90deg);
+}
+
+.student-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.detail-item {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--primary);
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+}
+
+.detail-item:hover {
+    background: var(--bg-quaternary);
+    transform: translateX(4px);
+}
+
+.status-badge {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.active {
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.status-badge.inactive {
+    background: var(--error-light);
+    color: var(--error);
+    border: 1px solid var(--error);
+}
+
+/* ===== PREDICTION MODAL STYLES ===== */
+.prediction-header {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-md);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.prediction-summary {
+    text-align: center;
+    margin-bottom: var(--space-lg);
+}
+
+.prediction-score {
+    display: inline-block;
+    padding: var(--space-xl);
+    border-radius: var(--radius-2xl);
+    background: var(--bg-secondary);
+    border: 3px solid var(--primary);
+    position: relative;
+    min-width: 180px;
+    max-width: 100%;
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.prediction-score.pass {
+    border-color: var(--success);
+    background: linear-gradient(135deg, var(--success-light), var(--bg-secondary));
+    box-shadow: var(--shadow-lg), var(--glow-secondary);
+}
+
+.prediction-score.fail {
+    border-color: var(--error);
+    background: linear-gradient(135deg, var(--error-light), var(--bg-secondary));
+    box-shadow: var(--shadow-lg), var(--glow-accent);
+}
+
+.score-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: var(--space-sm);
+    word-wrap: break-word;
+}
+
+.prediction-score.pass .score-number {
+    color: var(--success);
+}
+
+.prediction-score.fail .score-number {
+    color: var(--error);
+}
+
+.score-label {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.result-badge {
+    display: inline-block;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.result-badge.pass {
+    background: linear-gradient(135deg, var(--success), var(--secondary));
+    color: var(--text-inverse);
+}
+
+.result-badge.fail {
+    background: linear-gradient(135deg, var(--error), #e74c3c);
+    color: var(--text-inverse);
+}
+
+.model-predictions {
+    margin-bottom: var(--space-xl);
+}
+
+.model-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+}
+
+.model-prediction {
+    background: var(--bg-tertiary);
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    border-left: 4px solid var(--primary);
+    transition: all var(--transition-normal);
+}
+
+.model-prediction:hover {
+    background: var(--bg-quaternary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.model-name {
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: var(--space-sm);
+    font-size: 0.9rem;
+}
+
+.model-score {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.recommendation-section {
+    margin-bottom: var(--space-xl);
+}
+
+.recommendation-box {
+    background: var(--warning-light);
+    border: 1px solid var(--warning);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+}
+
+.recommendation-box i {
+    color: var(--warning);
+    font-size: 1.2rem;
+    margin-top: 0.2rem;
+}
+
+.recommendation-box p {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.prediction-footer {
+    text-align: center;
+    padding-top: var(--space-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.prediction-footer p {
+    margin: 0;
+    word-wrap: break-word;
+}
+
+.modal-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    margin-top: var(--space-xl);
+    padding-top: var(--space-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== NO DATA STYLES ===== */
+.no-data {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    display: block;
+    margin-bottom: var(--space-md);
+    color: var(--text-tertiary);
+    font-size: 3rem;
+}
+
+.no-data-link {
+    color: var(--primary) !important;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+}
+
+.no-data-link:hover {
+    color: var(--primary-light) !important;
+    text-decoration: underline;
+}
+
+.prediction-modal-title {
+    text-align: center;
+    color: var(--primary) !important;
+    margin-bottom: var(--space-xl);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+@media (max-width: 768px) {
+    .students-container {
+        margin: 2rem 1rem;
+        padding: var(--space-xl);
+    }
+    
+    .students-container h2 {
+        font-size: 2rem;
+    }
+    
+    .students-description {
+        font-size: 1.1rem;
+    }
+    
+    .filter-row {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        min-width: 100%;
+    }
+    
+    .action-buttons-container {
+        flex-direction: column;
+    }
+    
+    .action-btn-primary {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .user-students-table th,
+    .user-students-table td {
+        font-size: 0.95rem;
+        padding: var(--space-sm) var(--space-xs);
+    }
+    
+    .actions-cell {
+        flex-direction: row;
+        gap: var(--space-xs);
+        flex-wrap: wrap;
+        padding: var(--space-xs);
+    }
+    
+    .action-btn {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.75rem;
+        min-width: 50px;
+        height: 28px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-width: 95%;
+        margin: 1% auto;
+        padding: var(--space-md);
+        max-height: 98vh;
+    }
+    
+    .prediction-score {
+        padding: var(--space-md);
+        min-width: 150px;
+    }
+    
+    .score-number {
+        font-size: 2rem;
+    }
+    
+    .model-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: var(--space-xs);
+    }
+    
+    .model-prediction {
+        padding: var(--space-sm);
+    }
+    
+    .model-name {
+        font-size: 0.8rem;
+    }
+    
+    .model-score {
+        font-size: 1.2rem;
+    }
+    
+    .recommendation-box {
+        padding: var(--space-sm);
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .prediction-footer p {
+        font-size: 0.75rem;
+    }
+    
+    .prediction-header {
+        margin-bottom: var(--space-md);
+    }
+    
+    .prediction-summary {
+        margin-bottom: var(--space-md);
+    }
+    
+    .model-predictions {
+        margin-bottom: var(--space-md);
+    }
+    
+    .recommendation-section {
+        margin-bottom: var(--space-md);
+    }
+    
+    .student-details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .students-container {
+        margin: 1rem 0.5rem;
+        padding: var(--space-lg);
+    }
+    
+    .students-container h2 {
+        font-size: 1.8rem;
+    }
+    
+    .students-description {
+        font-size: 1rem;
+    }
+    
+    .user-students-table {
+        font-size: 0.85rem;
+    }
+    
+    .user-students-table th,
+    .user-students-table td {
+        padding: var(--space-xs);
+    }
+    
+    .stat-card {
+        padding: var(--space-lg);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .advanced-filters-container {
+        padding: var(--space-md);
+    }
+}
+</style>
+{% endblock %}

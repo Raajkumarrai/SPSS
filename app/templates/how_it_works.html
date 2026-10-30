@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}How It Works - SPPS{% endblock %}
+
+{% block content %}
+<div class="howitworks-hero">
+    <h1>How It Works</h1>
+    <p class="howitworks-subtitle">Discover how the Student Performance Prediction System empowers you to predict and improve academic outcomes.</p>
+</div>
+
+<div class="howitworks-section">
+    <h2 class="howitworks-heading">Our Process</h2>
+    <div class="howitworks-steps">
+        <div class="howitworks-step">
+            <span class="howitworks-step-number">1</span>
+            <div>
+                <h3>Data Collection</h3>
+                <p>We gather comprehensive data about students, including:</p>
+                <ul>
+                    <li>Academic history and previous performance</li>
+                    <li>Attendance records</li>
+                    <li>Study habits and hours</li>
+                    <li>Department and course information</li>
+                    <li>Extra-curricular activities</li>
+                </ul>
+            </div>
+        </div>
+        <div class="howitworks-step">
+            <span class="howitworks-step-number">2</span>
+            <div>
+                <h3>Advanced Analysis</h3>
+                <p>Our machine learning algorithms analyze:</p>
+                <ul>
+                    <li>Patterns in academic performance</li>
+                    <li>Correlation between different factors</li>
+                    <li>Historical success indicators</li>
+                    <li>Risk factors for academic challenges</li>
+                </ul>
+            </div>
+        </div>
+        <div class="howitworks-step">
+            <span class="howitworks-step-number">3</span>
+            <div>
+                <h3>Prediction Generation</h3>
+                <p>Based on the analysis, our system generates:</p>
+                <ul>
+                    <li>Performance predictions</li>
+                    <li>Risk assessments</li>
+                    <li>Personalized insights</li>
+                    <li>Recommendations for improvement</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="howitworks-section">
+    <h2 class="howitworks-heading">Key Features</h2>
+    <div class="howitworks-features">
+        <div class="howitworks-feature-card">
+            <h3>Accurate Predictions</h3>
+            <p>Advanced algorithms provide highly accurate performance predictions based on multiple factors.</p>
+        </div>
+        <div class="howitworks-feature-card">
+            <h3>Comprehensive Analysis</h3>
+            <p>We consider all aspects of student life, from academics to extra-curricular activities.</p>
+        </div>
+        <div class="howitworks-feature-card">
+            <h3>Early Warning System</h3>
+            <p>Identify potential academic challenges early and take preventive measures.</p>
+        </div>
+        <div class="howitworks-feature-card">
+            <h3>Personalized Insights</h3>
+            <p>Get customized recommendations based on individual student profiles and performance patterns.</p>
+        </div>
+    </div>
+</div>
+
+<div class="howitworks-section">
+    <h2 class="howitworks-heading">Getting Started</h2>
+    <ol class="howitworks-list">
+        <li>Create an account or log in to your existing account</li>
+        <li>Navigate to the Predict page</li>
+        <li>Fill in the required student information</li>
+        <li>Submit the form to get instant predictions</li>
+        <li>Review the results and recommendations</li>
+    </ol>
+    <div class="text-center">
+        {% if session.get('user_id') %}
+            {% if session.get('role') == 'admin' %}
+                <a href="/admin/predict" class="cta-button">Start Predicting Now</a>
+            {% else %}
+                <a href="/predict" class="cta-button">Start Predicting Now</a>
+            {% endif %}
+        {% else %}
+            <a href="/signup" class="cta-button">Start Predicting Now</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic How It Works Page */
+.howitworks-hero {
+    text-align: center;
+    padding: 4rem 1rem 3rem 1rem;
+    background: var(--bg-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.howitworks-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.howitworks-hero h1 {
+    color: var(--primary);
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+}
+
+.howitworks-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.howitworks-section {
+    max-width: 1200px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.howitworks-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.howitworks-heading {
+    color: var(--primary);
+    font-size: 2rem;
+    margin-bottom: 2.5rem;
+    text-align: center;
+    font-weight: 700;
+    position: relative;
+}
+
+.howitworks-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.howitworks-step {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: var(--space-2xl);
+    position: relative;
+    transition: all var(--transition-normal);
+    overflow: hidden;
+}
+
+.howitworks-step::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+}
+
+.howitworks-step:hover {
+    transform: translateY(-8px);
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    border-color: var(--primary);
+}
+
+.howitworks-step-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.howitworks-step h3 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.howitworks-step p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.howitworks-step ul {
+    color: var(--text-primary);
+    padding-left: 1.5rem;
+}
+
+.howitworks-step li {
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.howitworks-step li::before {
+    content: '▶';
+    color: var(--primary);
+    font-size: 0.8rem;
+    position: absolute;
+    left: -1.5rem;
+    top: 0.1rem;
+}
+
+.howitworks-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.howitworks-feature-card {
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    text-align: center;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.howitworks-feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--purple));
+    opacity: 0.8;
+}
+
+.howitworks-feature-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(245, 158, 11, 0.2);
+    border-color: var(--accent);
+}
+
+.howitworks-feature-card h3 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.howitworks-feature-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.howitworks-list {
+    margin: 2rem 0 3rem 2rem;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.howitworks-list li {
+    margin-bottom: 1rem;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.howitworks-list li::before {
+    content: '✓';
+    color: var(--primary);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-lg) var(--space-2xl);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    text-decoration: none;
+    border-radius: var(--radius-lg);
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.cta-button:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-2xl), var(--glow-primary);
+}
+
+.cta-button:hover::before {
+    left: 100%;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .howitworks-hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .howitworks-section {
+        margin: 2rem auto;
+        padding: var(--space-xl);
+    }
+    
+    .howitworks-steps {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .howitworks-features {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .howitworks-step {
+        padding: var(--space-xl);
+    }
+    
+    .howitworks-feature-card {
+        padding: var(--space-xl);
+    }
+}
+
+@media (max-width: 480px) {
+    .howitworks-hero {
+        padding: 3rem 1rem 2rem 1rem;
+    }
+    
+    .howitworks-hero h1 {
+        font-size: 2rem;
+    }
+    
+    .howitworks-subtitle {
+        font-size: 1.1rem;
+    }
+}
+</style>
+{% endblock %} 

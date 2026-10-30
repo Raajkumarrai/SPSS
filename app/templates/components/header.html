@@ -1,0 +1,113 @@
+<!-- Futuristic Header Component -->
+<header class="futuristic-header">
+    <div class="header-container">
+        <a href="/" class="logo">
+            <div class="logo-icon">
+                <i class="bi bi-cpu"></i>
+            </div>
+            <div class="logo-text">
+                <span class="logo-main">SPPS</span>
+                <span class="logo-sub">ML Analytics</span>
+            </div>
+        </a>
+
+        <nav class="nav-btns">
+            {% if session.get('user_id') %}
+            {% if session.get('role') == 'admin' %}
+            <a href="/admin/home" class="nav-btn">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/admin/users" class="nav-btn">
+                <i class="bi bi-people"></i>
+                <span>Users</span>
+            </a>
+            <a href="/admin/students" class="nav-btn">
+                <i class="bi bi-mortarboard"></i>
+                <span>Students</span>
+            </a>
+            <!-- <a href="/linear-regression" class="nav-btn">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>LR Predict</span>
+            </a> -->
+            <div class="dropdown">
+                <button class="dropbtn">
+                    <i class="bi bi-three-dots-vertical"></i>
+                    <span>More</span>
+                </button>
+                <div class="dropdown-content">
+                    <a href="/admin/activities">
+                        <i class="bi bi-activity"></i>
+                        <span>Activities</span>
+                    </a>
+                    <a href="/admin/history">
+                        <i class="bi bi-clock-history"></i>
+                        <span>History</span>
+                    </a>
+                    <a href="/admin/contact-messages">
+                        <i class="bi bi-envelope"></i>
+                        <span>Messages</span>
+                    </a>
+                    <a href="/admin/change-password">
+                        <i class="bi bi-key"></i>
+                        <span>Change Password</span>
+                    </a>
+                    <a href="/logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <a href="/user/home" class="nav-btn">
+                <i class="bi bi-house"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/predict" class="nav-btn">
+                <i class="bi bi-graph-up-arrow"></i>
+                <span>Predict</span>
+            </a>
+            <a href="/user/students" class="nav-btn">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
+            </a>
+            <div class="dropdown">
+                <button class="dropbtn">
+                    <i class="bi bi-three-dots-vertical"></i>
+                    <span>More</span>
+                </button>
+                <div class="dropdown-content">
+                    <a href="/user/history">
+                        <i class="bi bi-clock-history"></i>
+                        <span>History</span>
+                    </a>
+                    <a href="/user/mass-predict">
+                        <i class="bi bi-collection"></i>
+                        <span>Mass Predict</span>
+                    </a>
+                    <a href="/user/change-password">
+                        <i class="bi bi-key"></i>
+                        <span>Change Password</span>
+                    </a>
+                    <a href="/logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% else %}
+            <a href="/login" class="nav-btn btn-ghost">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span>Login</span>
+            </a>
+            <a href="/signup" class="nav-btn btn-primary">
+                <i class="bi bi-person-plus"></i>
+                <span>Sign Up</span>
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<!-- Modern styles are now in the main CSS file -->

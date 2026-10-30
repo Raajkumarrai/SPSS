@@ -1,0 +1,714 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}Mark Attendance - SPPS{% endblock %}
+
+{% block content %}
+<div class="mark-attendance-container">
+    <div class="page-header">
+        <h2>Mark Attendance</h2>
+        <p class="page-description">Mark attendance for students with filters</p>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <form method="GET" action="/user/attendance/mark" class="filters-form">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label for="department">Department:</label>
+                    <select id="department" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.department }}" {% if selected_department == dept.department %}selected{% endif %}>
+                            {{ dept.department }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="year">Year:</label>
+                    <select id="year" name="year">
+                        <option value="">All Years</option>
+                        {% for yr in years %}
+                        <option value="{{ yr.year }}" {% if selected_year == yr.year %}selected{% endif %}>
+                            {{ yr.year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="date_from">Date From:</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ date_from }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="date_to">Date To:</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ date_to }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="status">Status:</label>
+                    <select id="status" name="status">
+                        <option value="">All Status</option>
+                        <option value="present" {% if selected_status == 'present' %}selected{% endif %}>Present</option>
+                        <option value="absent" {% if selected_status == 'absent' %}selected{% endif %}>Absent</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn-filter">Apply Filters</button>
+                <a href="/user/attendance/mark" class="btn-clear">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Attendance Form Section -->
+    <div class="form-section">
+        <form id="attendanceForm" class="attendance-form">
+            <div class="form-header">
+                <h3>Attendance Details</h3>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="attendanceDate">Date:</label>
+                    <input type="date" id="attendanceDate" name="date" required value="{{ today }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="attendanceNotes">Notes (Optional):</label>
+                    <textarea id="attendanceNotes" name="notes" rows="3" placeholder="Add any notes..."></textarea>
+                </div>
+            </div>
+            
+            <div class="students-selection">
+                <div class="selection-header">
+                    <h4>Select Students and Mark Attendance ({{ students|length }} available)</h4>
+                    <div class="selection-controls">
+                        <button type="button" onclick="markAllPresent()" class="btn-select">Mark All Present</button>
+                        <button type="button" onclick="markAllAbsent()" class="btn-select">Mark All Absent</button>
+                        <button type="button" onclick="clearAllAttendance()" class="btn-select">Clear All</button>
+                    </div>
+                </div>
+                
+                <div class="students-list">
+                    {% if students %}
+                        {% for student in students %}
+                        <div class="student-item" data-student-id="{{ student.student_id }}">
+                            <div class="student-info">
+                                <strong>{{ student.student_name }}</strong> ({{ student.student_id }}) - {{ student.department }} - {{ student.year }}
+                            </div>
+                            <div class="attendance-buttons">
+                                <button type="button" class="btn-present" onclick="markStudent('{{ student.student_id }}', 'present')">
+                                    Present
+                                </button>
+                                <button type="button" class="btn-absent" onclick="markStudent('{{ student.student_id }}', 'absent')">
+                                    Absent
+                                </button>
+                                <span class="student-status" id="status-{{ student.student_id }}">Not Marked</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-students">
+                            <p>No students found matching the filters.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Save Attendance</button>
+                <a href="/user/attendance" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Store attendance data
+let attendanceData = {};
+
+function markStudent(studentId, status) {
+    attendanceData[studentId] = status;
+    updateStudentStatus(studentId, status);
+    updateSummary();
+}
+
+function markAllPresent() {
+    document.querySelectorAll('.student-item').forEach(item => {
+        const studentId = item.dataset.studentId;
+        if (studentId) {
+            markStudent(studentId, 'present');
+        }
+    });
+}
+
+function markAllAbsent() {
+    document.querySelectorAll('.student-item').forEach(item => {
+        const studentId = item.dataset.studentId;
+        if (studentId) {
+            markStudent(studentId, 'absent');
+        }
+    });
+}
+
+function clearAllAttendance() {
+    attendanceData = {};
+    document.querySelectorAll('.student-status').forEach(statusEl => {
+        statusEl.textContent = 'Not Marked';
+        statusEl.className = 'student-status';
+    });
+    updateSummary();
+}
+
+function updateStudentStatus(studentId, status) {
+    const statusEl = document.getElementById(`status-${studentId}`);
+    if (statusEl) {
+        statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusEl.className = `student-status status-${status}`;
+    }
+}
+
+function updateSummary() {
+    const total = Object.keys(attendanceData).length;
+    const present = Object.values(attendanceData).filter(s => s === 'present').length;
+    const absent = Object.values(attendanceData).filter(s => s === 'absent').length;
+    // You can add a summary display if needed
+}
+
+// Handle form submission
+document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (Object.keys(attendanceData).length === 0) {
+        alert('Please mark attendance for at least one student.');
+        return;
+    }
+    
+    const formData = new FormData(this);
+    const attendance_records = Object.keys(attendanceData).map(studentId => ({
+        student_id: studentId,
+        status: attendanceData[studentId],
+        notes: formData.get('notes') || ''
+    }));
+    
+    const data = {
+        attendance_data: attendance_records,
+        date: formData.get('date')
+    };
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Saving...';
+    submitBtn.disabled = true;
+    
+    // Send request
+    fetch('/user/attendance/bulk-mark', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.href = '/user/attendance';
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving attendance records. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Mark Attendance Page Styles */
+.mark-attendance-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.mark-attendance-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    z-index: 1;
+}
+
+.page-header h2 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-description {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Filters Section */
+.filters-section {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    z-index: 1;
+}
+
+.filters-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-lg);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: var(--space-md);
+    background: rgba(31, 41, 55, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: rgba(31, 41, 55, 0.8);
+}
+
+.filter-actions {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.btn-filter,
+.btn-clear {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-filter {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-filter:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.btn-clear {
+    background: rgba(31, 41, 55, 0.8);
+    color: var(--text-primary);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-clear:hover {
+    background: rgba(31, 41, 55, 1);
+    border-color: var(--text-secondary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Form Section */
+.form-section {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.form-header {
+    margin-bottom: var(--space-xl);
+}
+
+.form-header h3 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.attendance-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--space-lg);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.form-group input,
+.form-group textarea {
+    padding: var(--space-md);
+    background: rgba(31, 41, 55, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: rgba(31, 41, 55, 0.8);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Students Selection */
+.students-selection {
+    background: rgba(31, 41, 55, 0.4);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.selection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+
+.selection-header h4 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.selection-controls {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.btn-select {
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 0.9rem;
+}
+
+.btn-select:hover {
+    background: rgba(31, 41, 55, 1);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.students-list {
+    max-height: 500px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.students-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.students-list::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.students-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: var(--radius-md);
+}
+
+.student-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg);
+    background: rgba(31, 41, 55, 0.6);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-normal);
+    gap: var(--space-lg);
+}
+
+.student-item:hover {
+    background: rgba(31, 41, 55, 0.8);
+    border-color: var(--primary);
+}
+
+.student-info {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.attendance-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.btn-present,
+.btn-absent {
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 0.9rem;
+}
+
+.btn-present {
+    background: linear-gradient(135deg, var(--success), var(--secondary));
+    color: var(--text-inverse);
+}
+
+.btn-present:hover {
+    background: linear-gradient(135deg, var(--secondary), var(--success));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-absent {
+    background: linear-gradient(135deg, var(--error), #dc3545);
+    color: var(--text-inverse);
+}
+
+.btn-absent:hover {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.student-status {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+}
+
+.student-status.status-present {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.student-status.status-absent {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+}
+
+.no-students {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--text-secondary);
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+    padding-top: var(--space-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.btn-secondary {
+    background: rgba(31, 41, 55, 0.8);
+    color: var(--text-primary);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(31, 41, 55, 1);
+    border-color: var(--text-secondary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .mark-attendance-container {
+        padding: var(--space-lg);
+        margin: 1rem;
+    }
+    
+    .filters-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .selection-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .student-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-md);
+    }
+    
+    .attendance-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+

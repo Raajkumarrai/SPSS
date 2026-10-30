@@ -1,0 +1,124 @@
+<!-- Futuristic Admin Footer Component -->
+<footer class="futuristic-footer admin-footer">
+    <div class="footer-container">
+        <div class="footer-section">
+            <div class="footer-icon" style="background: linear-gradient(135deg, var(--accent), var(--accent-light));">
+                <i class="bi bi-tools"></i>
+            </div>
+            <h3>Admin Tools</h3>
+            <ul>
+                <li><a href="/admin/users">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Manage Users</span>
+                    </a></li>
+                <li><a href="/admin/students">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Manage Students</span>
+                    </a></li>
+                <li><a href="/admin/activities">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>View Activities</span>
+                    </a></li>
+                <li><a href="/admin/history">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Prediction History</span>
+                    </a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <div class="footer-icon" style="background: linear-gradient(135deg, var(--primary), var(--primary-light));">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <h3>Prediction Tools</h3>
+            <ul>
+                <li><a href="/admin/predict">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Single Prediction</span>
+                    </a></li>
+                <li><a href="/admin/mass-predict">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Mass Prediction</span>
+                    </a></li>
+                <li><a href="/admin/contact-messages">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Contact Messages</span>
+                    </a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <div class="footer-icon"
+                style="background: linear-gradient(135deg, var(--secondary), var(--secondary-light));">
+                <i class="bi bi-gear"></i>
+            </div>
+            <h3>System</h3>
+            <ul>
+                <li><a href="/admin/home">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Dashboard</span>
+                    </a></li>
+                <li><a href="/admin/change-password">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Change Password</span>
+                    </a></li>
+                <li><a href="/logout">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Logout</span>
+                    </a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <div class="footer-icon" style="background: linear-gradient(135deg, var(--purple), var(--purple-light));">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <h3>Quick Stats</h3>
+            <div class="admin-stats">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Users</span>
+                        <span class="stat-value">{{ session.get('total_users', 'N/A') }}</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="bi bi-mortarboard"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Students</span>
+                        <span class="stat-value">{{ session.get('total_students', 'N/A') }}</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Predictions Today</span>
+                        <span class="stat-value">{{ session.get('predictions_today', 'N/A') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="footer-bottom-content">
+            <div class="footer-logo">
+                <div class="footer-logo-icon"
+                    style="background: linear-gradient(135deg, var(--accent), var(--accent-light));">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div class="footer-logo-text">
+                    <span class="footer-logo-main">SPPS</span>
+                    <span class="footer-logo-sub">Admin Portal</span>
+                </div>
+            </div>
+            <!-- <div class="footer-copyright">
+                <p>&copy; 2024 Student Performance Prediction System. Admin Portal.</p>
+            </div> -->
+        </div>
+    </div>
+</footer>
+
+<!-- Futuristic styles are now in the main CSS file -->

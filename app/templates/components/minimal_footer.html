@@ -1,0 +1,63 @@
+<!-- Minimal Footer Component -->
+<footer class="minimal-footer">
+    <div class="minimal-footer-container">
+        <div class="minimal-footer-content">
+            <span class="minimal-text">SPPS Admin Panel</span>
+            <span class="minimal-separator">|</span>
+            <a href="/logout" class="minimal-link">Logout</a>
+        </div>
+    </div>
+</footer>
+
+<style>
+.minimal-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    padding: 0.5rem 0;
+    margin-top: 2rem;
+}
+
+.minimal-footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.minimal-footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.minimal-text {
+    font-weight: 500;
+}
+
+.minimal-separator {
+    color: #dee2e6;
+}
+
+.minimal-link {
+    color: #4169E1;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.minimal-link:hover {
+    color: #27408b;
+}
+
+@media (max-width: 768px) {
+    .minimal-footer-content {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .minimal-separator {
+        display: none;
+    }
+}
+</style>

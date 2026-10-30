@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+{% block header %}{% include 'components/admin_header.html' %}{% endblock %}
+{% block title %}Add Student - Admin - SPPS{% endblock %}
+{% block content %}
+<div class="admin-student-form-container">
+    <h2 class="form-title">Add Student</h2>
+    
+    <!-- Download Template Button -->
+    <div class="template-download-section">
+        <button type="button" class="download-template-btn" onclick="downloadStudentTemplate()">
+            <i class="fas fa-download"></i> Download Excel Template
+        </button>
+        <p class="template-hint">Download the template to add multiple students via Excel</p>
+    </div>
+    
+    <form method="POST" action="" enctype="multipart/form-data" id="studentForm">
+        <div class="form-group">
+            <label for="student_id">Student ID:</label>
+            <input type="text" id="student_id" name="student_id" placeholder="Enter student ID (e.g. STU001)">
+        </div>
+        <div class="form-group">
+            <label for="name">Student Name:</label>
+            <input type="text" id="name" name="name" placeholder="Enter student name">
+        </div>
+        <div class="form-group">
+            <label for="total_working_days">Total Working Days:</label>
+            <input type="number" id="total_working_days" name="total_working_days" min="0" step="1" placeholder="e.g. 100">
+        </div>
+        <div class="form-group">
+            <label for="total_present_days">Total Present Days:</label>
+            <input type="number" id="total_present_days" name="total_present_days" min="0" step="1" placeholder="e.g. 85">
+            <small class="form-hint">Attendance percentage will be calculated automatically</small>
+        </div>
+        <div class="form-group">
+            <label for="total_assignments">Total Assignments:</label>
+            <input type="number" id="total_assignments" name="total_assignments" min="0" step="1" placeholder="e.g. 10">
+        </div>
+        <div class="form-group">
+            <label for="submitted_assignments">Submitted Assignments:</label>
+            <input type="number" id="submitted_assignments" name="submitted_assignments" min="0" step="1" placeholder="e.g. 8">
+            <small class="form-hint">Assignment completion percentage will be calculated automatically</small>
+        </div>
+        <div class="form-group">
+            <label for="study_time">Study Time (hours/day):</label>
+            <input type="number" id="study_time" name="study_time" min="0" max="24" step="0.1" placeholder="e.g. 2.5">
+        </div>
+        <div class="form-group">
+            <label for="previous_score">Previous Score (%):</label>
+            <input type="number" id="previous_score" name="previous_score" min="0" max="100" step="0.1" placeholder="e.g. 75.0">
+        </div>
+        <div class="form-group">
+            <label for="total_extracurricular">Total Extracurricular Activities:</label>
+            <input type="number" id="total_extracurricular" name="total_extracurricular" min="0" step="1" placeholder="e.g. 5">
+        </div>
+        <div class="form-group">
+            <label for="participated_extracurricular">Participated Extracurricular Activities:</label>
+            <input type="number" id="participated_extracurricular" name="participated_extracurricular" min="0" step="1" placeholder="e.g. 3">
+            <small class="form-hint">Extracurricular participation percentage will be calculated automatically</small>
+        </div>
+        <div class="form-group">
+            <label for="department">Department:</label>
+            <select id="department" name="department" onchange="handleDepartmentChange()">
+                <option value="">Select Department</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Biology">Biology</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Business">Business</option>
+                <option value="Arts">Arts</option>
+                <option value="other">Other (Add New)</option>
+            </select>
+            <input type="text" id="other_department" name="other_department" placeholder="Enter department name" style="display: none; margin-top: 0.5rem;" class="form-input other-department-input">
+        </div>
+        <div class="form-group">
+            <label for="year">Year:</label>
+            <select id="year" name="year">
+                <option value="">Select Year</option>
+                <option value="1st">1st Year</option>
+                <option value="2nd">2nd Year</option>
+                <option value="3rd">3rd Year</option>
+                <option value="4th">4th Year</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="status">Status:</label>
+            <select id="status" name="status">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="excelFile">Upload Excel File (.xlsx) - Optional:</label>
+            <input type="file" id="excelFile" name="excelFile" accept=".xlsx">
+            <small class="form-hint">You can either fill out the form above OR upload an Excel file with multiple students</small>
+        </div>
+        <button type="submit">Add Student</button>
+    </form>
+</div>
+{% endblock %}
+{% block styles %}
+<style>
+/* Futuristic Admin Add Student Form */
+.admin-student-form-container {
+    max-width: 700px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-student-form-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.admin-student-form-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(0, 212, 255, 0.2);
+    border-color: var(--primary);
+}
+
+.form-title {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+}
+
+.template-download-section {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.download-template-btn {
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+    color: var(--text-inverse);
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.download-template-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-slow);
+}
+
+.download-template-btn:hover {
+    background: linear-gradient(135deg, var(--secondary-light), var(--secondary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-secondary);
+}
+
+.download-template-btn:hover::before {
+    left: 100%;
+}
+
+.download-template-btn:active {
+    transform: translateY(0);
+}
+
+.template-hint {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: var(--space-md);
+    margin-bottom: 0;
+}
+
+.admin-student-form-container form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select,
+.form-group input[type="file"] {
+    width: 100%;
+    padding: var(--space-md);
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.form-group input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.form-group select {
+    cursor: pointer;
+}
+
+.form-group select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.form-hint {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: var(--space-xs);
+    display: block;
+    font-style: italic;
+}
+
+.other-department-input {
+    margin-top: var(--space-sm) !important;
+}
+
+.admin-student-form-container button[type="submit"] {
+    width: 100%;
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+    margin-top: var(--space-md);
+}
+
+.admin-student-form-container button[type="submit"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-slow);
+}
+
+.admin-student-form-container button[type="submit"]:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2xl), var(--glow-primary);
+}
+
+.admin-student-form-container button[type="submit"]:hover::before {
+    left: 100%;
+}
+
+.admin-student-form-container button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* File input styling */
+.form-group input[type="file"] {
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+}
+
+.form-group input[type="file"]::file-selector-button {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+    margin-right: var(--space-md);
+    transition: all var(--transition-normal);
+}
+
+.form-group input[type="file"]::file-selector-button:hover {
+    background: var(--bg-quaternary);
+    border-color: var(--primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-student-form-container {
+        margin: 2rem 1rem;
+        padding: var(--space-xl);
+        max-width: 100%;
+    }
+    
+    .form-title {
+        font-size: 1.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-student-form-container {
+        padding: var(--space-lg);
+    }
+    
+    .form-title {
+        font-size: 1.5rem;
+    }
+    
+    .download-template-btn {
+        padding: var(--space-sm) var(--space-md);
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %} 
+
+{% block extra_js %}
+<script>
+// Function to handle department dropdown change
+function handleDepartmentChange() {
+    const departmentSelect = document.getElementById('department');
+    const otherDepartmentInput = document.getElementById('other_department');
+    
+    if (departmentSelect.value === 'other') {
+        otherDepartmentInput.style.display = 'block';
+        otherDepartmentInput.required = true;
+    } else {
+        otherDepartmentInput.style.display = 'none';
+        otherDepartmentInput.required = false;
+        otherDepartmentInput.value = '';
+    }
+}
+
+// Function to download student template
+function downloadStudentTemplate() {
+    const downloadBtn = document.querySelector('.download-template-btn');
+    const originalText = downloadBtn.innerHTML;
+    
+    // Show loading state
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    downloadBtn.disabled = true;
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = '/download-student-template';
+    link.download = 'student_template.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Reset button after a short delay
+    setTimeout(() => {
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+    }, 2000);
+}
+
+// Function to add new department to dropdown
+function addDepartmentToDropdown(departmentName) {
+    const departmentSelect = document.getElementById('department');
+    
+    // Check if department already exists
+    for (let i = 0; i < departmentSelect.options.length; i++) {
+        if (departmentSelect.options[i].value === departmentName) {
+            return; // Department already exists
+        }
+    }
+    
+    // Add new department option before "Other" option
+    const otherOption = departmentSelect.querySelector('option[value="other"]');
+    const newOption = document.createElement('option');
+    newOption.value = departmentName;
+    newOption.textContent = departmentName;
+    
+    departmentSelect.insertBefore(newOption, otherOption);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('studentForm');
+    const excelFileInput = document.getElementById('excelFile');
+    
+    // Handle form submission for new departments
+    form.addEventListener('submit', function(event) {
+        console.log("Form submission started");
+        console.log("Excel file selected:", excelFileInput.files.length > 0);
+        
+        const departmentSelect = document.getElementById('department');
+        const otherDepartmentInput = document.getElementById('other_department');
+        
+        // If "Other" is selected and a new department name is provided
+        if (departmentSelect.value === 'other' && otherDepartmentInput.value.trim()) {
+            const newDepartment = otherDepartmentInput.value.trim();
+            
+            // Add the new department to the dropdown
+            addDepartmentToDropdown(newDepartment);
+            
+            // Set the department value to the new department name
+            departmentSelect.value = newDepartment;
+        }
+        
+        // If an Excel file is selected, let the form submit normally to the add-student route
+        if (excelFileInput.files.length > 0) {
+            console.log("Excel file detected, proceeding with upload");
+            
+            // Remove required attributes from form fields when Excel file is uploaded
+            const requiredFields = ['student_id', 'name', 'department', 'year', 'status'];
+            requiredFields.forEach(fieldName => {
+                const field = document.getElementById(fieldName);
+                if (field) {
+                    field.removeAttribute('required');
+                }
+            });
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Processing Excel File...';
+            submitBtn.disabled = true;
+            
+            // The form will submit normally to the add-student route
+            // which will handle the Excel file upload
+        } else {
+            console.log("No Excel file, proceeding with form validation");
+            
+            // Add required attributes back to form fields when no Excel file
+            const requiredFields = ['student_id', 'name', 'department', 'year', 'status'];
+            requiredFields.forEach(fieldName => {
+                const field = document.getElementById(fieldName);
+                if (field) {
+                    field.setAttribute('required', 'required');
+                }
+            });
+        }
+    });
+    
+    // Initialize department field on page load
+    handleDepartmentChange();
+    
+    // Add event listener to Excel file input to handle required attributes
+    excelFileInput.addEventListener('change', function() {
+        const requiredFields = ['student_id', 'name', 'department', 'year', 'status'];
+        
+        if (this.files.length > 0) {
+            // Excel file selected - remove required attributes
+            requiredFields.forEach(fieldName => {
+                const field = document.getElementById(fieldName);
+                if (field) {
+                    field.removeAttribute('required');
+                }
+            });
+            console.log("Required attributes removed due to Excel file selection");
+        } else {
+            // No Excel file - add required attributes back
+            requiredFields.forEach(fieldName => {
+                const field = document.getElementById(fieldName);
+                if (field) {
+                    field.setAttribute('required', 'required');
+                }
+            });
+            console.log("Required attributes restored due to no Excel file");
+        }
+    });
+});
+</script>
+{% endblock %} 

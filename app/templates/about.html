@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - SPPS{% endblock %}
+
+{% block content %}
+<div class="about-hero">
+    <h1>About SPPS</h1>
+    <p class="about-subtitle">Empowering educational success through advanced AI and machine learning</p>
+</div>
+
+<div class="about-section">
+    <div class="about-container">
+        <div class="about-content">
+            <h2>Our Mission</h2>
+            <p>We are dedicated to revolutionizing education through cutting-edge technology. Our Student Performance
+                Prediction System (SPPS) leverages advanced machine learning algorithms to provide accurate predictions
+                and actionable insights that help students, educators, and institutions make informed decisions about
+                academic success.</p>
+        </div>
+
+        <div class="about-features">
+            <div class="about-feature">
+                <div class="feature-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h3>Advanced Analytics</h3>
+                <p>Our system uses sophisticated machine learning models to analyze multiple data points and generate
+                    highly accurate performance predictions.</p>
+            </div>
+
+            <div class="about-feature">
+                <div class="feature-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h3>Data Security</h3>
+                <p>We prioritize the security and privacy of all student data, implementing industry-standard encryption
+                    and protection protocols.</p>
+            </div>
+
+            <div class="about-feature">
+                <div class="feature-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h3>User-Friendly</h3>
+                <p>Our intuitive interface makes it easy for educators and administrators to access powerful insights
+                    without technical expertise.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="about-section">
+    <div class="about-container">
+        <h2>Our Technology</h2>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <h3>Machine Learning</h3>
+                <p>Advanced algorithms that learn from historical data to identify patterns and predict future
+                    performance with high accuracy.</p>
+            </div>
+
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="bi bi-database"></i>
+                </div>
+                <h3>Data Analytics</h3>
+                <p>Comprehensive analysis of attendance, assignments, study patterns, and academic history to provide
+                    holistic insights.</p>
+            </div>
+
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <h3>Predictive Modeling</h3>
+                <p>Sophisticated models that consider multiple factors to generate reliable predictions and risk
+                    assessments.</p>
+            </div>
+
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="bi bi-gear"></i>
+                </div>
+                <h3>Continuous Learning</h3>
+                <p>Our system continuously improves its accuracy through feedback and new data, ensuring better
+                    predictions over time.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <div class="about-section">
+    <div class="about-container">
+        <h2>Our Impact</h2>
+        <div class="impact-stats">
+            <div class="stat-item">
+                <div class="stat-number">94%</div>
+                <div class="stat-label">Prediction Accuracy</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">1000+</div>
+                <div class="stat-label">Students Analyzed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">Educational Institutions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">System Availability</div>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<div class="about-section">
+    <div class="about-container">
+        <h2>Our Vision</h2>
+        <p>We envision a future where every student has access to personalized insights that help them achieve their
+            full academic potential. By combining the power of artificial intelligence with educational expertise, we're
+            creating tools that not only predict performance but also provide actionable recommendations for
+            improvement.</p>
+
+        <div class="vision-points">
+            <div class="vision-point">
+                <i class="bi bi-check-circle"></i>
+                <span>Democratize access to advanced educational analytics</span>
+            </div>
+            <div class="vision-point">
+                <i class="bi bi-check-circle"></i>
+                <span>Empower educators with data-driven insights</span>
+            </div>
+            <div class="vision-point">
+                <i class="bi bi-check-circle"></i>
+                <span>Help students identify and overcome academic challenges</span>
+            </div>
+            <div class="vision-point">
+                <i class="bi bi-check-circle"></i>
+                <span>Create a more personalized learning experience</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Futuristic About Page */
+    .about-hero {
+        text-align: center;
+        padding: 4rem 1rem 3rem 1rem;
+        background: var(--bg-primary);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 25% 25%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .about-hero h1 {
+        color: var(--primary);
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 1;
+    }
+
+    .about-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.25rem;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .about-section {
+        max-width: 1200px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .about-container {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-2xl);
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: var(--space-2xl);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        opacity: 0.8;
+    }
+
+    .about-content h2 {
+        color: var(--primary);
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+    }
+
+    .about-content p {
+        color: var(--white);
+        font-size: 1.1rem;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+    }
+
+    .about-features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .about-feature {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        text-align: center;
+        transition: all var(--transition-normal);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-feature::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--purple));
+        opacity: 0.8;
+    }
+
+    .about-feature:hover {
+        transform: translateY(-8px);
+        box-shadow:
+            0 12px 40px rgba(0, 0, 0, 0.4),
+            0 0 20px rgba(245, 158, 11, 0.2);
+        border-color: var(--accent);
+    }
+
+    .feature-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+        font-size: 1.75rem;
+        color: var(--text-inverse);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .about-feature h3 {
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .about-feature p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .tech-item {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        text-align: center;
+        transition: all var(--transition-normal);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tech-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--secondary), var(--primary));
+        opacity: 0.8;
+    }
+
+    .tech-item:hover {
+        transform: translateY(-8px);
+        box-shadow:
+            0 12px 40px rgba(0, 0, 0, 0.4),
+            0 0 20px rgba(16, 185, 129, 0.2);
+        border-color: var(--secondary);
+    }
+
+    .tech-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+        font-size: 1.5rem;
+        color: var(--text-inverse);
+        box-shadow: var(--shadow-md);
+    }
+
+    .tech-item h3 {
+        color: var(--text-primary);
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .tech-item p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .impact-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: var(--space-xl);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--purple));
+        opacity: 0.8;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-4px);
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(139, 92, 246, 0.2);
+        border-color: var(--purple);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .vision-points {
+        margin-top: 2rem;
+    }
+
+    .vision-point {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        margin-bottom: 1rem;
+        padding: var(--space-md);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all var(--transition-normal);
+    }
+
+    .vision-point:hover {
+        background: rgba(0, 212, 255, 0.05);
+        border-color: var(--primary);
+    }
+
+    .vision-point i {
+        color: var(--primary);
+        font-size: 1.25rem;
+        min-width: 20px;
+    }
+
+    .vision-point span {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .about-hero h1 {
+            font-size: 2.5rem;
+        }
+
+        .about-section {
+            margin: 2rem auto;
+            padding: 0 0.5rem;
+        }
+
+        .about-container {
+            padding: var(--space-xl);
+        }
+
+        .about-features {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .tech-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .impact-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .about-hero {
+            padding: 3rem 1rem 2rem 1rem;
+        }
+
+        .about-hero h1 {
+            font-size: 2rem;
+        }
+
+        .about-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .impact-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}

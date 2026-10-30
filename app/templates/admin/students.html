@@ -1,0 +1,826 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/admin_header.html' %}{% endblock %}
+
+{% block title %}Manage Students - Admin - SPPS{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="admin-students-container">
+    <h2>Manage Students</h2>
+    <p class="admin-students-description">View and manage all students in the system.</p>
+    
+    <div class="action-buttons-container">
+        <button class="action-btn-primary download-btn" onclick="downloadStudentsExcel()" title="Download all students as Excel">
+            <i class="fas fa-download"></i> Download Excel
+        </button>
+        <button class="action-btn-primary add-btn" onclick="window.location.href='/admin/add-student'">
+            <i class="fas fa-plus"></i> Add Student
+        </button>
+    </div>
+    
+    <div class="students-search-container">
+        <form class="students-search-form" method="get" action="">
+            <input type="text" name="search" placeholder="Search by name, student ID, department, or year..." class="students-search-input">
+            <button type="submit" class="students-search-btn">Search</button>
+        </form>
+    </div>
+    
+    <div class="students-table-container">
+        <table class="admin-students-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Year</th>
+                    <th>Status</th>
+                    <th>Attendance (%)</th>
+                    <th>Assignment (%)</th>
+                    <th>Study Time (hrs)</th>
+                    <th>Previous Score (%)</th>
+                    <th>Extracurricular (%)</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.id }}</td>
+                    <td>{{ student.student_id }}</td>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.department }}</td>
+                    <td>{{ student.year }}</td>
+                    <td>
+                        <span class="status-badge status-{{ student.status|lower }}">
+                            {{ student.status }}
+                        </span>
+                    </td>
+                    <td>{{ "%.1f"|format(student.attendance) if student.attendance else "0.0" }}%</td>
+                    <td>{{ "%.1f"|format(student.assignment) if student.assignment else "0.0" }}%</td>
+                    <td>{{ "%.1f"|format(student.study_time) if student.study_time else "0.0" }}</td>
+                    <td>{{ "%.1f"|format(student.previous_score) if student.previous_score else "0.0" }}%</td>
+                    <td>{{ "%.1f"|format(student.extracurricular) if student.extracurricular else "0.0" }}%</td>
+                    <td>{{ student.created_at.strftime('%Y-%m-%d %H:%M') if student.created_at else 'N/A' }}</td>
+                    <td class="actions-cell">
+                        <button class="action-btn edit-btn" onclick="editStudent({{ student.id }})" title="Edit Student">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteStudent({{ student.id }})" title="Delete Student">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        <button class="action-btn view-btn" onclick="viewStudentDetails({{ student.id }})" title="View Details">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div id="studentModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Student Details</h3>
+        <div id="studentDetails"></div>
+    </div>
+</div>
+
+<script>
+function editStudent(studentId) {
+    if (confirm('Are you sure you want to edit this student?')) {
+        window.location.href = `/admin/edit-student/${studentId}`;
+    }
+}
+
+function deleteStudent(studentId) {
+    if (confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
+        // Send DELETE request to server
+        fetch(`/admin/delete-student/${studentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin' // Include session cookies
+        })
+        .then(response => {
+            // Check if response redirects to login page (session expired)
+            if (response.redirected && response.url.includes('/login')) {
+                alert('Your session has expired. Please log in again.');
+                window.location.href = '/login';
+                return null;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data) return; // Skip if redirected due to session expiration
+            
+            if (data.success) {
+                alert('Student deleted successfully!');
+                location.reload();
+            } else {
+                alert('Error deleting student: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting student. Please try again.');
+        });
+    }
+}
+
+function viewStudentDetails(studentId) {
+    // Fetch student details from API
+    fetch(`/api/student/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const student = data.student;
+                const detailsHtml = `
+                    <div class="student-details-grid">
+                        <div class="detail-item">
+                            <strong>Student ID:</strong> ${student.student_id}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Name:</strong> ${student.name}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Department:</strong> ${student.department}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Year:</strong> ${student.year}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Status:</strong> 
+                            <span class="status-badge status-${student.status.toLowerCase()}">${student.status}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Attendance:</strong> ${student.attendance.toFixed(1)}%
+                        </div>
+                        <div class="detail-item">
+                            <strong>Assignment Completion:</strong> ${student.assignment.toFixed(1)}%
+                        </div>
+                        <div class="detail-item">
+                            <strong>Study Time:</strong> ${student.study_time.toFixed(1)} hours/day
+                        </div>
+                        <div class="detail-item">
+                            <strong>Previous Score:</strong> ${student.previous_score.toFixed(1)}%
+                        </div>
+                        <div class="detail-item">
+                            <strong>Extracurricular:</strong> ${student.extracurricular.toFixed(1)}%
+                        </div>
+                        <div class="detail-item">
+                            <strong>Created:</strong> ${student.created_at || 'N/A'}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('studentDetails').innerHTML = detailsHtml;
+                document.getElementById('studentModal').style.display = 'block';
+            } else {
+                alert('Error fetching student details: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error fetching student details. Please try again.');
+        });
+}
+
+// Modal functionality
+const modal = document.getElementById('studentModal');
+const span = document.getElementsByClassName('close')[0];
+
+span.onclick = function() {
+    modal.style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Download Excel functionality
+function downloadStudentsExcel() {
+    const downloadBtn = document.querySelector('.download-btn');
+    const originalText = downloadBtn.innerHTML;
+    
+    // Show loading state
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    downloadBtn.disabled = true;
+    
+    // Get current search parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const search = urlParams.get('search') || '';
+    
+    // Create download URL with current search
+    const downloadUrl = `/admin/download-students-excel?search=${encodeURIComponent(search)}`;
+    
+    // Create temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `admin_students_${new Date().toISOString().split('T')[0]}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Reset button after a short delay
+    setTimeout(() => {
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+        alert('Excel file downloaded successfully!');
+    }, 2000);
+}
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic Admin Students Page */
+.admin-students-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-students-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.admin-students-container h2 {
+    text-align: center;
+    color: #4169E1 !important;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #4169E1, var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+}
+
+.admin-students-description {
+    text-align: center;
+    color: var(--text-secondary) !important;
+    margin-bottom: 2.5rem;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.action-buttons-container {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+    margin-bottom: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    min-width: 160px;
+    text-decoration: none;
+}
+
+.action-btn-primary.add-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+}
+
+.action-btn-primary.download-btn {
+    background: linear-gradient(135deg, var(--success), var(--secondary));
+    color: var(--text-inverse);
+}
+
+.action-btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.action-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.action-btn-primary.add-btn:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+}
+
+.action-btn-primary.download-btn:hover {
+    background: linear-gradient(135deg, var(--secondary), var(--success));
+}
+
+.action-btn-primary:hover::before {
+    left: 100%;
+}
+
+.action-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===== SEARCH CONTAINER ===== */
+.students-search-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    box-sizing: border-box;
+}
+
+.students-search-form {
+    display: flex;
+    gap: var(--space-md);
+    background: var(--bg-secondary);
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    justify-content: center;
+}
+
+.students-search-input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: var(--space-lg) var(--space-md);
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+    font-family: inherit;
+    flex-grow: 3;
+}
+
+.students-search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.students-search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.students-search-btn {
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    min-width: 100px;
+    max-width: 120px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-md);
+}
+
+.students-search-btn:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+/* ===== TABLE STYLES ===== */
+.students-table-container {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: auto;
+    background: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-xl);
+    box-shadow: 
+        var(--shadow-lg),
+        0 0 30px rgba(0, 212, 255, 0.1);
+    padding: var(--space-xl);
+    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+}
+
+.students-table-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0.5;
+}
+
+/* Custom scrollbar for table container */
+.students-table-container::-webkit-scrollbar {
+    height: 12px;
+}
+
+.students-table-container::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+}
+
+.students-table-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--bg-tertiary);
+}
+
+.students-table-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, var(--primary-light), var(--secondary-light));
+}
+
+.admin-students-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: var(--space-md);
+    min-width: 1200px;
+}
+
+.admin-students-table th,
+.admin-students-table td {
+    padding: var(--space-lg) var(--space-md);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.admin-students-table th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all var(--transition-normal);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.admin-students-table tbody tr {
+    background: rgba(31, 41, 55, 0.7);
+    transition: all var(--transition-normal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-students-table tbody tr:nth-child(even) {
+    background: rgba(37, 51, 71, 0.6);
+}
+
+.admin-students-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.admin-students-table tbody td {
+    color: #FFFFFF !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.admin-students-table tbody td * {
+    color: #FFFFFF !important;
+}
+
+/* ===== BADGES ===== */
+.status-badge {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.status-inactive {
+    background: rgba(220, 53, 69, 0.2);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+}
+
+/* ===== ACTION BUTTONS IN TABLE ===== */
+.actions-cell {
+    display: flex;
+    gap: var(--space-xs);
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-direction: row;
+    padding: var(--space-sm);
+}
+
+.action-btn {
+    padding: var(--space-xs) var(--space-sm);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    min-width: 60px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1.2;
+    height: 32px;
+    font-family: inherit;
+    box-sizing: border-box;
+    vertical-align: middle;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-normal);
+}
+
+.edit-btn {
+    background: linear-gradient(135deg, var(--success), var(--secondary));
+    color: var(--text-inverse);
+}
+
+.edit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--glow-secondary);
+}
+
+.edit-btn:hover::before {
+    left: 100%;
+}
+
+.delete-btn {
+    background: linear-gradient(135deg, var(--error), #dc3545);
+    color: var(--text-inverse);
+}
+
+.delete-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--glow-accent);
+}
+
+.delete-btn:hover::before {
+    left: 100%;
+}
+
+.view-btn {
+    background: linear-gradient(135deg, var(--info), var(--primary));
+    color: var(--text-inverse);
+}
+
+.view-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--glow-primary);
+}
+
+.view-btn:hover::before {
+    left: 100%;
+}
+
+/* ===== MODAL STYLES ===== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: var(--z-modal);
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    margin: 5% auto;
+    padding: var(--space-2xl);
+    border-radius: var(--radius-2xl);
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+.close {
+    color: var(--text-secondary);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: var(--space-lg);
+    top: var(--space-lg);
+    transition: all var(--transition-normal);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    background: var(--bg-tertiary);
+}
+
+.close:hover {
+    color: var(--text-primary);
+    background: var(--bg-quaternary);
+    transform: rotate(90deg);
+}
+
+.student-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.detail-item {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--primary);
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+}
+
+.detail-item:hover {
+    background: var(--bg-quaternary);
+    transform: translateX(4px);
+}
+
+.detail-item strong {
+    color: var(--primary);
+    display: block;
+    margin-bottom: var(--space-xs);
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+@media (max-width: 768px) {
+    .admin-students-container {
+        margin: 2rem 1rem;
+        padding: var(--space-xl);
+    }
+    
+    .admin-students-container h2 {
+        font-size: 2rem;
+    }
+    
+    .admin-students-description {
+        font-size: 1.1rem;
+    }
+    
+    .action-buttons-container {
+        flex-direction: column;
+    }
+    
+    .action-btn-primary {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .students-search-form {
+        flex-direction: column;
+    }
+    
+    .students-search-input,
+    .students-search-btn {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .admin-students-table th,
+    .admin-students-table td {
+        font-size: 0.85rem;
+        padding: var(--space-sm) var(--space-xs);
+    }
+    
+    .actions-cell {
+        flex-direction: row;
+        gap: var(--space-xs);
+        flex-wrap: wrap;
+        padding: var(--space-xs);
+    }
+    
+    .action-btn {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.75rem;
+        min-width: 50px;
+        height: 28px;
+    }
+    
+    .student-details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-students-container {
+        margin: 1rem 0.5rem;
+        padding: var(--space-lg);
+    }
+    
+    .admin-students-container h2 {
+        font-size: 1.8rem;
+    }
+    
+    .admin-students-description {
+        font-size: 1rem;
+    }
+    
+    .admin-students-table {
+        font-size: 0.85rem;
+    }
+    
+    .admin-students-table th,
+    .admin-students-table td {
+        padding: var(--space-xs);
+    }
+}
+</style>
+{% endblock %}

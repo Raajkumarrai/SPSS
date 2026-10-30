@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+{% block title %}Prediction Result - SPPS{% endblock %}
+{% block content %}
+<div class="predict-result-container">
+    <div class="predict-result-header">
+        <h2 class="page-title">ML Prediction Result</h2>
+        <p class="page-subtitle">Student performance prediction using advanced machine learning models</p>
+    </div>
+    
+    <!-- Main Prediction Card -->
+    <div class="predict-result-card">
+        <h3 class="section-title">Student Performance Prediction</h3>
+        <div class="predict-student-info">
+            <span class="predict-student-name">Student Name: <strong>{{ request.form.get('student_name', 'N/A') }}</strong></span>
+        </div>
+        <div class="predict-result-value">{{ prediction_result }}</div>
+        <div class="predict-result-detail">Predicted Score: <span class="score-highlight">{{ "%.1f"|format(predicted_score) }}%</span></div>
+        <div class="predict-result-detail">Best Model: <span class="model-highlight">{{ best_model }}</span></div>
+        <div class="predict-recommendation">
+            <span class="recommendation-label">Recommendation:</span>
+            <span class="recommendation-text">{{ recommendation }}</span>
+        </div>
+    </div>
+    
+    <!-- All Models Predictions -->
+    {% if all_predictions %}
+    <div class="models-predictions-card">
+        <h3 class="section-title">All ML Models Predictions</h3>
+        <div class="models-grid">
+            {% for model_name, prediction in all_predictions.items() %}
+            <div class="model-prediction">
+                <div class="model-name">{{ model_name }}</div>
+                <div class="model-score">{{ "%.1f"|format(prediction) if prediction is number else prediction }}%</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Input Data Summary -->
+    <div class="input-data-card">
+        <h3 class="section-title">Input Data Summary</h3>
+        <div class="input-grid">
+            <div class="input-item">
+                <span class="input-label">Attendance:</span>
+                <span class="input-value">{{ request.form.get('attendance', 'N/A') }}%</span>
+            </div>
+            <div class="input-item">
+                <span class="input-label">Assignment:</span>
+                <span class="input-value">{{ request.form.get('assignment', 'N/A') }}%</span>
+            </div>
+            <div class="input-item">
+                <span class="input-label">Study Time:</span>
+                <span class="input-value">{{ request.form.get('study_time', 'N/A') }} hrs/day</span>
+            </div>
+            <div class="input-item">
+                <span class="input-label">Previous Score:</span>
+                <span class="input-value">{{ request.form.get('previous_score', 'N/A') }}%</span>
+            </div>
+            <div class="input-item">
+                <span class="input-label">Extracurricular:</span>
+                <span class="input-value">{{ request.form.get('extracurricular', 'N/A') }}%</span>
+            </div>
+            <div class="input-item">
+                <span class="input-label">Department:</span>
+                <span class="input-value">{{ request.form.get('department', 'N/A') }}</span>
+            </div>
+            <div class="input-item">
+                <span class="input-label">Year:</span>
+                <span class="input-value">{{ request.form.get('year', 'N/A') }}</span>
+            </div>
+            <div class="input-item">
+                <span class="input-label">Status:</span>
+                <span class="input-value">{{ request.form.get('status', 'N/A') }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="action-buttons">
+        <a href="/predict" class="btn-primary">Predict Again</a>
+        <a href="/user/history" class="btn-secondary">View History</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic Prediction Result Page - Matching Exams Theme */
+.predict-result-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: 0 var(--space-xl);
+    position: relative;
+}
+
+.predict-result-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.page-title {
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.predict-result-card,
+.models-predictions-card,
+.input-data-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.predict-result-card::before,
+.models-predictions-card::before,
+.input-data-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.predict-result-card {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.section-title {
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.predict-student-info {
+    margin-bottom: var(--space-md);
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    background: rgba(0, 212, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    font-weight: 500;
+    display: inline-block;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.predict-student-name {
+    display: inline-block;
+}
+
+.predict-student-name strong {
+    color: var(--primary);
+}
+
+.predict-result-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: var(--space-md) 0;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 20px rgba(0, 255, 150, 0.3);
+}
+
+.predict-result-detail {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.score-highlight {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 1.2em;
+}
+
+.model-highlight {
+    font-weight: 600;
+    color: var(--secondary);
+}
+
+.predict-recommendation {
+    margin-top: var(--space-lg);
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    background: rgba(0, 255, 150, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    border: 1px solid rgba(0, 255, 150, 0.2);
+    text-align: left;
+}
+
+.recommendation-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.recommendation-text {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* Models Predictions Card */
+.models-predictions-card {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-md);
+}
+
+.model-prediction {
+    background: rgba(0, 212, 255, 0.05);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    text-align: center;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    transition: all var(--transition-normal);
+}
+
+.model-prediction:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+    transform: translateY(-2px);
+    background: rgba(0, 212, 255, 0.1);
+}
+
+.model-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: var(--space-sm);
+}
+
+.model-score {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Input Data Card */
+.input-data-card {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+}
+
+.input-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    background: rgba(0, 212, 255, 0.05);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--primary);
+    transition: all var(--transition-normal);
+}
+
+.input-item:hover {
+    background: rgba(0, 212, 255, 0.1);
+    transform: translateX(4px);
+}
+
+.input-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.input-value {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 1.05rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+    text-align: center;
+    margin-top: var(--space-2xl);
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-block;
+    padding: var(--space-md) var(--space-2xl);
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    border: none;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 212, 255, 0.4);
+    color: var(--text-inverse);
+    text-decoration: none;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-quaternary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .predict-result-container {
+        padding: 0 var(--space-md);
+        margin: 2rem auto;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .predict-result-card,
+    .models-predictions-card,
+    .input-data-card {
+        padding: var(--space-xl);
+    }
+    
+    .predict-result-value {
+        font-size: 2rem;
+    }
+    
+    .models-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .input-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+</style>
+{% endblock %} 

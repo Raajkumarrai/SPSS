@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}Prediction History - SPPS{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <h2>Your Prediction History</h2>
+    <p class="history-description">View all your past predictions and recommendations for students.</p>
+    
+    <div class="history-search-container">
+        <form class="history-search-form" method="get" action="">
+            <div class="search-input-wrapper">
+                <input type="text" name="search" value="{{ search }}" placeholder="Search by name, department, or prediction..." class="history-search-input">
+            </div>
+            <button type="submit" class="history-search-btn">
+                <i class="bi bi-search"></i>
+                <span>Search</span>
+            </button>
+        </form>
+    </div>
+    
+    <div class="history-table-container">
+        <table class="user-history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Student ID</th>
+                    <th>Attendance</th>
+                    <th>Assignment</th>
+                    <th>Study Time</th>
+                    <th>Previous Score</th>
+                    <th>Extracurricular</th>
+                    <th>Department</th>
+                    <th>Year</th>
+                    <th>Prediction</th>
+                    <th>Recommendation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if history %}
+                    {% for record in history %}
+                    <tr>
+                        <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M') if record.created_at else 'N/A' }}</td>
+                        <td>{{ record.student_id if record.student_id else 'N/A' }}</td>
+                        <td>{{ "%.1f"|format(record.attendance) if record.attendance else 'N/A' }}%</td>
+                        <td>{{ "%.1f"|format(record.assignment) if record.assignment else 'N/A' }}%</td>
+                        <td>{{ "%.1f"|format(record.study_time) if record.study_time else 'N/A' }} hrs</td>
+                        <td>{{ "%.1f"|format(record.previous_score) if record.previous_score else 'N/A' }}%</td>
+                        <td>{{ "%.1f"|format(record.extracurricular) if record.extracurricular else 'N/A' }}%</td>
+                        <td>{{ record.department if record.department else 'N/A' }}</td>
+                        <td>{{ record.year if record.year else 'N/A' }}</td>
+                        <td>{{ "%.1f"|format(record.predicted_score) if record.predicted_score else 'N/A' }}%</td>
+                        <td>{{ record.recommendation if record.recommendation else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="11">
+                            <div class="no-data">
+                                <i class="fas fa-history"></i>
+                                <p>No prediction history yet.</p>
+                                <p>Start making predictions to see your history here!</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic History Page */
+.history-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.history-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.history-container h2 {
+    text-align: center;
+    color: #4169E1 !important;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #4169E1, var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+}
+
+.history-description {
+    text-align: center;
+    color: var(--text-secondary) !important;
+    margin-bottom: 2.5rem;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== SEARCH CONTAINER ===== */
+.history-search-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    box-sizing: border-box;
+}
+
+.history-search-form {
+    display: flex;
+    gap: var(--space-md);
+    background: var(--bg-secondary);
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    justify-content: center;
+}
+
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    flex-grow: 3;
+}
+
+.history-search-input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: var(--space-lg) var(--space-md);
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+    font-family: inherit;
+}
+
+.history-search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.history-search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.history-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    min-width: 100px;
+    max-width: 120px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-md);
+}
+
+.history-search-btn i {
+    font-size: 0.9rem;
+}
+
+.history-search-btn:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+/* ===== TABLE STYLES ===== */
+.history-table-container {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: auto;
+    background: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-xl);
+    box-shadow: 
+        var(--shadow-lg),
+        0 0 30px rgba(0, 212, 255, 0.1);
+    padding: var(--space-xl);
+    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+}
+
+.history-table-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0.5;
+}
+
+/* Custom scrollbar for table container */
+.history-table-container::-webkit-scrollbar {
+    height: 12px;
+}
+
+.history-table-container::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+}
+
+.history-table-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--bg-tertiary);
+}
+
+.history-table-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, var(--primary-light), var(--secondary-light));
+}
+
+.user-history-table {
+    min-width: 1400px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: var(--space-md);
+}
+
+.user-history-table th,
+.user-history-table td {
+    padding: var(--space-lg) var(--space-md);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.user-history-table th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all var(--transition-normal);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.user-history-table tbody tr {
+    background: rgba(31, 41, 55, 0.7);
+    transition: all var(--transition-normal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-history-table tbody tr:nth-child(even) {
+    background: rgba(37, 51, 71, 0.6);
+}
+
+.user-history-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.user-history-table tbody td {
+    color: #FFFFFF !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-history-table tbody td * {
+    color: #FFFFFF !important;
+}
+
+/* ===== NO DATA STYLES ===== */
+.no-data {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    display: block;
+    margin-bottom: var(--space-md);
+    color: var(--text-tertiary);
+    font-size: 3rem;
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+@media (max-width: 768px) {
+    .history-container {
+        margin: 2rem 1rem;
+        padding: var(--space-xl);
+    }
+    
+    .history-container h2 {
+        font-size: 2rem;
+    }
+    
+    .history-description {
+        font-size: 1.1rem;
+    }
+    
+    .history-search-form {
+        flex-direction: column;
+    }
+    
+    .search-input-wrapper {
+        width: 100%;
+    }
+    
+    .history-search-input,
+    .history-search-btn {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .user-history-table th,
+    .user-history-table td {
+        font-size: 0.85rem;
+        padding: var(--space-sm) var(--space-xs);
+    }
+}
+
+@media (max-width: 480px) {
+    .history-container {
+        margin: 1rem 0.5rem;
+        padding: var(--space-lg);
+    }
+    
+    .history-container h2 {
+        font-size: 1.8rem;
+    }
+    
+    .history-description {
+        font-size: 1rem;
+    }
+    
+    .user-history-table {
+        font-size: 0.85rem;
+    }
+    
+    .user-history-table th,
+    .user-history-table td {
+        padding: var(--space-xs);
+    }
+}
+</style>
+{% endblock %} 

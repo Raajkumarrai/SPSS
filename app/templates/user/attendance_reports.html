@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/user_header.html' %}{% endblock %}
+
+{% block title %}Attendance Reports - SPPS{% endblock %}
+
+{% block content %}
+<div class="attendance-reports-container">
+    <div class="attendance-header">
+        <h2 class="page-title">Attendance Reports</h2>
+        <p class="attendance-subtitle">Generate and view attendance reports and statistics</p>
+    </div>
+
+    <!-- Export Section -->
+    <div class="export-section">
+        <div class="export-actions">
+            <a href="/user/attendance/export" class="btn-export">Export to Excel</a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="summary-section">
+        <h3 class="section-title">Summary Statistics</h3>
+        <div class="summary-stats">
+            <div class="stat-card total">
+                <div class="stat-number">{{ summary.total_students }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-card present">
+                <div class="stat-number">{{ summary.present_students }}</div>
+                <div class="stat-label">Good Attendance (≥80%)</div>
+            </div>
+            <div class="stat-card absent">
+                <div class="stat-number">{{ summary.absent_students }}</div>
+                <div class="stat-label">Poor Attendance (<80%)</div>
+            </div>
+            <div class="stat-card average">
+                <div class="stat-number">{{ summary.avg_attendance }}%</div>
+                <div class="stat-label">Average Attendance</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="reports-section">
+        <div class="reports-header">
+            <h3 class="section-title">Student Attendance Summary ({{ reports|length }} students)</h3>
+        </div>
+        
+        {% if reports %}
+        <div class="table-container">
+            <table class="reports-table">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Total Days</th>
+                        <th>Present Days</th>
+                        <th>Absent Days</th>
+                        <th>Attendance %</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>{{ report.student_id }}</td>
+                        <td>{{ report.student_name }}</td>
+                        <td>{{ report.department }}</td>
+                        <td>{{ report.year }}</td>
+                        <td>{{ report.total_days }}</td>
+                        <td>{{ report.present_days }}</td>
+                        <td>{{ report.absent_days }}</td>
+                        <td class="attendance-percentage">
+                            <span class="percentage-{{ 'excellent' if report.attendance_percentage >= 90 else 'good' if report.attendance_percentage >= 80 else 'average' if report.attendance_percentage >= 60 else 'poor' }}">
+                                {{ "%.1f"|format(report.attendance_percentage) }}%
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ 'excellent' if report.attendance_percentage >= 90 else 'good' if report.attendance_percentage >= 80 else 'average' if report.attendance_percentage >= 60 else 'poor' }}">
+                                {% if report.attendance_percentage >= 90 %}
+                                    Excellent
+                                {% elif report.attendance_percentage >= 80 %}
+                                    Good
+                                {% elif report.attendance_percentage >= 60 %}
+                                    Average
+                                {% else %}
+                                    Poor
+                                {% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-reports">
+            <p>No attendance reports found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic Attendance Reports Page */
+.attendance-reports-container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: 0 var(--space-xl);
+}
+
+.attendance-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.page-title {
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.attendance-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.export-section {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.export-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0.8;
+}
+
+.export-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+}
+
+.btn-export {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-slow);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--bg-quaternary), var(--bg-tertiary));
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-quaternary));
+    transform: translateY(-2px);
+    border-color: var(--text-secondary);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-export {
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-export::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-slow);
+}
+
+.btn-export:hover {
+    background: linear-gradient(135deg, var(--secondary-light), var(--secondary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-secondary);
+}
+
+.btn-export:hover::before {
+    left: 100%;
+}
+
+.summary-section {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--space-2xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0.8;
+}
+
+.section-title {
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-lg);
+}
+
+.stat-card {
+    text-align: center;
+    padding: var(--space-xl);
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-normal);
+    background: var(--bg-secondary);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    opacity: 0.8;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.stat-card.total {
+    border-color: var(--primary);
+}
+
+.stat-card.total::before {
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+}
+
+.stat-card.total:hover {
+    box-shadow: var(--shadow-xl), var(--glow-primary);
+}
+
+.stat-card.present {
+    border-color: var(--success);
+}
+
+.stat-card.present::before {
+    background: linear-gradient(90deg, var(--success), var(--secondary));
+}
+
+.stat-card.present:hover {
+    box-shadow: var(--shadow-xl), var(--glow-success);
+}
+
+.stat-card.absent {
+    border-color: var(--error);
+}
+
+.stat-card.absent::before {
+    background: linear-gradient(90deg, var(--error), #e74c3c);
+}
+
+.stat-card.absent:hover {
+    box-shadow: var(--shadow-xl), var(--glow-error);
+}
+
+.stat-card.average {
+    border-color: var(--warning);
+}
+
+.stat-card.average::before {
+    background: linear-gradient(90deg, var(--warning), var(--accent));
+}
+
+.stat-card.average:hover {
+    box-shadow: var(--shadow-xl), var(--glow-warning);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+    position: relative;
+    z-index: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    position: relative;
+    z-index: 1;
+}
+
+.reports-section {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.reports-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0.8;
+}
+
+.reports-header {
+    margin-bottom: var(--space-lg);
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+}
+
+.reports-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.reports-table th,
+.reports-table td {
+    padding: var(--space-md);
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary) !important;
+}
+
+.reports-table th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary) !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+.reports-table td {
+    color: var(--text-primary) !important;
+}
+
+.reports-table td:not(.attendance-percentage):not(.status-badge):not(.attendance-percentage *):not(.status-badge *) {
+    color: var(--text-primary) !important;
+}
+
+.reports-table td * {
+    color: var(--text-primary) !important;
+}
+
+.reports-table tbody tr {
+    transition: all var(--transition-normal);
+}
+
+.reports-table tbody tr:hover {
+    background: var(--bg-tertiary);
+    transform: translateX(4px);
+}
+
+.reports-table tbody tr:hover td {
+    color: var(--text-primary) !important;
+}
+
+.reports-table tbody tr:hover td * {
+    color: var(--text-primary) !important;
+}
+
+.attendance-percentage {
+    font-weight: 600;
+    color: var(--text-primary) !important;
+}
+
+.percentage-excellent {
+    color: var(--success) !important;
+}
+
+.percentage-good {
+    color: var(--secondary) !important;
+}
+
+.percentage-average {
+    color: var(--warning) !important;
+}
+
+.percentage-poor {
+    color: var(--error) !important;
+}
+
+.status-badge {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+.status-excellent {
+    background: linear-gradient(135deg, var(--success), var(--success-light));
+    color: var(--text-inverse);
+    box-shadow: 0 2px 8px var(--success-glow);
+}
+
+.status-good {
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+    color: var(--text-inverse);
+    box-shadow: 0 2px 8px var(--secondary-glow);
+}
+
+.status-average {
+    background: linear-gradient(135deg, var(--warning), var(--warning-light));
+    color: var(--text-inverse);
+    box-shadow: 0 2px 8px var(--warning-glow);
+}
+
+.status-poor {
+    background: linear-gradient(135deg, var(--error), #e74c3c);
+    color: var(--text-inverse);
+    box-shadow: 0 2px 8px var(--error-glow);
+}
+
+.no-reports {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--text-secondary);
+}
+
+.no-reports p {
+    margin-bottom: var(--space-lg);
+    font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .attendance-reports-container {
+        padding: 0 var(--space-md);
+        margin: 2rem auto;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .export-section,
+    .summary-section,
+    .reports-section {
+        padding: var(--space-xl);
+    }
+    
+    .export-actions {
+        justify-content: center;
+    }
+    
+    .btn-export {
+        width: 100%;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+    }
+    
+    .stat-card {
+        padding: var(--space-lg);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .reports-table {
+        font-size: 0.8rem;
+    }
+    
+    .reports-table th,
+    .reports-table td {
+        padding: var(--space-sm);
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block header %}{% include 'components/admin_header.html' %}{% endblock %}
+
+{% block title %}Edit Student - Admin - SPPS{% endblock %}
+
+{% block content %}
+<div class="edit-student-container">
+    <h2 class="form-title">Edit Student</h2>
+    
+    <form class="edit-student-form" method="POST">
+        <div class="form-group">
+            <label for="student_id">Student ID:</label>
+            <input type="text" id="student_id" name="student_id" value="{{ student.student_id if student.student_id else '' }}" required class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="name">Student Name:</label>
+            <input type="text" id="name" name="name" value="{{ student.name }}" required class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="total_working_days">Total Working Days:</label>
+            <input type="number" id="total_working_days" name="total_working_days" min="0" step="1" value="{{ student.total_working_days or 0 }}" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="total_present_days">Total Present Days:</label>
+            <input type="number" id="total_present_days" name="total_present_days" min="0" step="1" value="{{ student.total_present_days or 0 }}" class="form-input">
+            <small class="form-hint">
+                Current Attendance: <span class="percentage-value">{{ "%.2f"|format((student.total_present_days / student.total_working_days * 100) if student.total_working_days and student.total_working_days > 0 else 0) }}%</span>
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="total_assignments">Total Assignments:</label>
+            <input type="number" id="total_assignments" name="total_assignments" min="0" step="1" value="{{ student.total_assignments or 0 }}" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="submitted_assignments">Submitted Assignments:</label>
+            <input type="number" id="submitted_assignments" name="submitted_assignments" min="0" step="1" value="{{ student.submitted_assignments or 0 }}" class="form-input">
+            <small class="form-hint">
+                Current Assignment Completion: <span class="percentage-value">{{ "%.2f"|format((student.submitted_assignments / student.total_assignments * 100) if student.total_assignments and student.total_assignments > 0 else 0) }}%</span>
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="study_time">Study Time (hours/day):</label>
+            <input type="number" id="study_time" name="study_time" min="0" max="24" step="0.1" value="{{ student.study_time or 0 }}" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="previous_score">Previous Score (%):</label>
+            <input type="number" id="previous_score" name="previous_score" min="0" max="100" step="0.1" value="{{ student.previous_score or 0 }}" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="total_extracurricular">Total Extracurricular Activities:</label>
+            <input type="number" id="total_extracurricular" name="total_extracurricular" min="0" step="1" value="{{ student.total_extracurricular or 0 }}" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="participated_extracurricular">Participated Extracurricular Activities:</label>
+            <input type="number" id="participated_extracurricular" name="participated_extracurricular" min="0" step="1" value="{{ student.participated_extracurricular or 0 }}" class="form-input">
+            <small class="form-hint">
+                Current Extracurricular Participation: <span class="percentage-value">{{ "%.2f"|format((student.participated_extracurricular / student.total_extracurricular * 100) if student.total_extracurricular and student.total_extracurricular > 0 else 0) }}%</span>
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="department">Department:</label>
+            <select id="department" name="department" required class="form-input" onchange="handleDepartmentChange()">
+                <option value="">Select Department</option>
+                <option value="Computer Science" {% if student.department == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                <option value="Mathematics" {% if student.department == 'Mathematics' %}selected{% endif %}>Mathematics</option>
+                <option value="Physics" {% if student.department == 'Physics' %}selected{% endif %}>Physics</option>
+                <option value="Chemistry" {% if student.department == 'Chemistry' %}selected{% endif %}>Chemistry</option>
+                <option value="Biology" {% if student.department == 'Biology' %}selected{% endif %}>Biology</option>
+                <option value="Engineering" {% if student.department == 'Engineering' %}selected{% endif %}>Engineering</option>
+                <option value="Business" {% if student.department == 'Business' %}selected{% endif %}>Business</option>
+                <option value="Arts" {% if student.department == 'Arts' %}selected{% endif %}>Arts</option>
+                <option value="other" {% if student.department not in ['Computer Science', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Engineering', 'Business', 'Arts'] and student.department %}selected{% endif %}>Other (Add New)</option>
+            </select>
+            <input type="text" id="other_department" name="other_department" placeholder="Enter department name" style="display: none; margin-top: 0.5rem;" class="form-input other-department-input" value="{% if student.department not in ['Computer Science', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Engineering', 'Business', 'Arts'] and student.department %}{{ student.department }}{% endif %}">
+        </div>
+        
+        <div class="form-group">
+            <label for="year">Year:</label>
+            <select id="year" name="year" required class="form-input">
+                <option value="">Select Year</option>
+                <option value="1st" {% if student.year == '1st' %}selected{% endif %}>1st Year</option>
+                <option value="2nd" {% if student.year == '2nd' %}selected{% endif %}>2nd Year</option>
+                <option value="3rd" {% if student.year == '3rd' %}selected{% endif %}>3rd Year</option>
+                <option value="4th" {% if student.year == '4th' %}selected{% endif %}>4th Year</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="status">Status:</label>
+            <select id="status" name="status" required class="form-input">
+                <option value="">Select Status</option>
+                <option value="Active" {% if student.status == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if student.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                <option value="Suspended" {% if student.status == 'Suspended' %}selected{% endif %}>Suspended</option>
+            </select>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="save-btn">Save Changes</button>
+            <button type="button" class="cancel-btn" onclick="window.location.href='/admin/students'">Cancel</button>
+        </div>
+    </form>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Function to handle department dropdown change
+function handleDepartmentChange() {
+    const departmentSelect = document.getElementById('department');
+    const otherDepartmentInput = document.getElementById('other_department');
+    
+    if (departmentSelect.value === 'other') {
+        otherDepartmentInput.style.display = 'block';
+        otherDepartmentInput.required = true;
+    } else {
+        otherDepartmentInput.style.display = 'none';
+        otherDepartmentInput.required = false;
+        otherDepartmentInput.value = '';
+    }
+}
+
+// Function to add new department to dropdown
+function addDepartmentToDropdown(departmentName) {
+    const departmentSelect = document.getElementById('department');
+    
+    // Check if department already exists
+    for (let i = 0; i < departmentSelect.options.length; i++) {
+        if (departmentSelect.options[i].value === departmentName) {
+            return; // Department already exists
+        }
+    }
+    
+    // Add new department option before "Other" option
+    const otherOption = departmentSelect.querySelector('option[value="other"]');
+    const newOption = document.createElement('option');
+    newOption.value = departmentName;
+    newOption.textContent = departmentName;
+    
+    departmentSelect.insertBefore(newOption, otherOption);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.edit-student-form');
+    
+    // Handle form submission for new departments
+    form.addEventListener('submit', function(event) {
+        const departmentSelect = document.getElementById('department');
+        const otherDepartmentInput = document.getElementById('other_department');
+        
+        // If "Other" is selected and a new department name is provided
+        if (departmentSelect.value === 'other' && otherDepartmentInput.value.trim()) {
+            const newDepartment = otherDepartmentInput.value.trim();
+            
+            // Add the new department to the dropdown
+            addDepartmentToDropdown(newDepartment);
+            
+            // Set the department value to the new department name
+            departmentSelect.value = newDepartment;
+        }
+    });
+    
+    // Initialize department field on page load
+    handleDepartmentChange();
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Futuristic Admin Edit Student Form */
+.edit-student-container {
+    max-width: 700px;
+    margin: 3rem auto;
+    padding: var(--space-2xl);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-2xl);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.edit-student-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0.8;
+}
+
+.edit-student-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(0, 212, 255, 0.2);
+    border-color: var(--primary);
+}
+
+.form-title {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+}
+
+.edit-student-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: var(--space-md);
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+    background: var(--bg-primary);
+}
+
+.form-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.form-input:invalid {
+    border-color: var(--error);
+}
+
+.form-group select {
+    cursor: pointer;
+}
+
+.form-group select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.form-hint {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: var(--space-xs);
+    display: block;
+    font-style: italic;
+}
+
+.percentage-value {
+    color: var(--primary);
+    font-weight: 600;
+    font-style: normal;
+}
+
+.other-department-input {
+    margin-top: var(--space-sm) !important;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    margin-top: var(--space-lg);
+}
+
+.save-btn, .cancel-btn {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    min-width: 140px;
+    position: relative;
+    overflow: hidden;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-md);
+}
+
+.save-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left var(--transition-slow);
+}
+
+.save-btn:hover {
+    background: linear-gradient(135deg, var(--secondary-light), var(--secondary));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--glow-secondary);
+}
+
+.save-btn:hover::before {
+    left: 100%;
+}
+
+.save-btn:active {
+    transform: translateY(0);
+}
+
+.cancel-btn {
+    background: linear-gradient(135deg, var(--bg-quaternary), var(--bg-tertiary));
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-sm);
+}
+
+.cancel-btn:hover {
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-quaternary));
+    transform: translateY(-2px);
+    border-color: var(--text-secondary);
+    box-shadow: var(--shadow-md);
+}
+
+.cancel-btn:active {
+    transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .edit-student-container {
+        margin: 2rem 1rem;
+        padding: var(--space-xl);
+        max-width: 100%;
+    }
+    
+    .form-title {
+        font-size: 1.75rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .save-btn, .cancel-btn {
+        width: 100%;
+        min-width: unset;
+    }
+}
+
+@media (max-width: 480px) {
+    .edit-student-container {
+        padding: var(--space-lg);
+    }
+    
+    .form-title {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %} 

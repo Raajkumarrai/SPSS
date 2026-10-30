@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="predict-container">
+    <h2>Student Performance Prediction</h2>
+    <p class="predict-description">Use the custom Linear Regression model to predict a student’s final score and risk of
+        failure.</p>
+
+    <form class="predict-form" method="POST" action="/linear-regression/predict">
+        <div class="form-row">
+
+            <div class="form-group">
+                <label for="student_name">Student Name:</label>
+                <input type="text" id="student_name" name="student_name" required placeholder="Enter student full name">
+            </div>
+
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <select id="department" name="department" required>
+                    <option value="">Select Department</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Economics">Economics</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Literature">Literature</option>
+                    <option value="History">History</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="year">Academic Year:</label>
+                <select id="year" name="year" required>
+                    <option value="">Select Year</option>
+                    <option value="1st">1st Year</option>
+                    <option value="2nd">2nd Year</option>
+                    <option value="3rd">3rd Year</option>
+                    <option value="4th">4th Year</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select id="status" name="status" required>
+                    <option value="">Select Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+            </div>
+
+            <!-- Numeric input features -->
+            <div class="form-group">
+                <label for="attendance">Attendance (%)</label>
+                <input type="number" id="attendance" name="attendance" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="assignment">Assignment (%)</label>
+                <input type="number" id="assignment" name="assignment" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="study_time">Study Time (hrs)</label>
+                <input type="number" id="study_time" name="study_time" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="previous_score">Previous Score (%)</label>
+                <input type="number" id="previous_score" name="previous_score" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="extracurricular">Extracurricular (%)</label>
+                <input type="number" id="extracurricular" name="extracurricular" step="0.01" required>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="predict-btn">Predict</button>
+            <button type="reset" class="reset-btn">Reset</button>
+        </div>
+    </form>
+</div>
+
+<!-- Include the JS auto-fill script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const studentSelect = document.getElementById('student_id');
+        const studentNameInput = document.getElementById('student_name');
+        const departmentInput = document.getElementById('department');
+        const yearInput = document.getElementById('year');
+        const statusInput = document.getElementById('status');
+
+        const studentsData = {
+        {% for student in students %}
+        '{{ student.id }}': {
+            name: '{{ student.name }}',
+                department: '{{ student.department }}',
+                    year: '{{ student.year }}',
+                        status: '{{ student.status }}',
+                            attendance: '{{ student.attendance }}',
+                                assignment: '{{ student.assignment }}',
+                                    study_time: '{{ student.study_time }}',
+                                        previous_score: '{{ student.previous_score }}',
+                                            extracurricular: '{{ student.extracurricular }}'
+        } {% if not loop.last %}, {% endif %}
+        {% endfor %}
+    };
+
+    studentSelect.addEventListener('change', function () {
+        const selectedStudentId = this.value;
+        if (selectedStudentId && studentsData[selectedStudentId]) {
+            const studentData = studentsData[selectedStudentId];
+
+            studentNameInput.value = studentData.name;
+            departmentInput.value = studentData.department;
+            yearInput.value = studentData.year;
+            statusInput.value = studentData.status;
+
+            document.getElementById('attendance').value = studentData.attendance;
+            document.getElementById('assignment').value = studentData.assignment;
+            document.getElementById('study_time').value = studentData.study_time;
+            document.getElementById('previous_score').value = studentData.previous_score;
+            document.getElementById('extracurricular').value = studentData.extracurricular;
+        } else {
+            studentNameInput.value = '';
+            departmentInput.value = '';
+            yearInput.value = '';
+            statusInput.value = '';
+            document.getElementById('attendance').value = '';
+            document.getElementById('assignment').value = '';
+            document.getElementById('study_time').value = '';
+            document.getElementById('previous_score').value = '';
+            document.getElementById('extracurricular').value = '';
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Futuristic Predict Container */
+    .predict-container {
+        max-width: 900px;
+        margin: 3rem auto;
+        padding: var(--space-2xl);
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-2xl);
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .predict-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        opacity: 0.8;
+    }
+
+    .predict-container h2 {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .predict-description {
+        text-align: center;
+        font-size: 1.2rem;
+        color: var(--text-primary);
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Form styling */
+    .predict-form {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: var(--space-md);
+        font-size: 1rem;
+        color: var(--text-primary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-lg);
+        background: var(--bg-secondary);
+        font-family: inherit;
+        transition: all var(--transition-normal);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow:
+            0 0 0 3px rgba(0, 212, 255, 0.1),
+            0 0 20px rgba(0, 212, 255, 0.2);
+        background: var(--bg-primary);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Buttons */
+    .predict-btn,
+    .reset-btn {
+        min-width: 180px;
+        padding: var(--space-lg) var(--space-2xl);
+        font-size: 1.1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: var(--radius-lg);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-normal);
+    }
+
+    .predict-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: var(--text-inverse);
+    }
+
+    .predict-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left var(--transition-normal);
+    }
+
+    .predict-btn:hover {
+        background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-2xl), var(--glow-primary);
+    }
+
+    .predict-btn:hover::before {
+        left: 100%;
+    }
+
+    .reset-btn {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .reset-btn:hover {
+        background: var(--bg-primary);
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* Number input alignment */
+    .form-group input[type="number"] {
+        text-align: right;
+    }
+
+    /* Select styling */
+    .form-group select {
+        cursor: pointer;
+    }
+
+    .form-group select option {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    /* Form validation */
+    .form-group input:invalid,
+    .form-group select:invalid {
+        border-color: var(--error);
+    }
+
+    .form-group input:valid,
+    .form-group select:valid {
+        border-color: var(--success);
+    }
+
+    /* Disabled buttons */
+    .predict-btn:disabled,
+    .reset-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .predict-btn:disabled:hover,
+    .reset-btn:disabled:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .predict-container {
+            margin: 2rem 1rem;
+            padding: var(--space-xl);
+        }
+
+        .predict-container h2 {
+            font-size: 2rem;
+        }
+
+        .predict-description {
+            font-size: 1.1rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .predict-btn,
+        .reset-btn {
+            width: 100%;
+            min-width: auto;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .predict-container {
+            margin: 1rem 0.5rem;
+            padding: var(--space-lg);
+        }
+
+        .predict-container h2 {
+            font-size: 1.8rem;
+        }
+
+        .predict-description {
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: var(--space-sm);
+            font-size: 0.95rem;
+        }
+    }
+</style>
+{% endblock %}
